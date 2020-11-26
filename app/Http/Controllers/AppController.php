@@ -2180,7 +2180,7 @@ class AppController extends Controller
                 $disparo->status = 0;
                 $disparo->isFlashSms = $input['isFlashSms'];
                 $disparo->save();
-
+            
                 ProcessSms::dispatch($disparo);
             }
         }

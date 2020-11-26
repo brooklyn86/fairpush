@@ -34,6 +34,7 @@ class ProcessSms implements ShouldQueue
      */
     public function handle()
     {
+
         $numero = $this->sms->numero;
         $numero = str_replace('(', '', $numero); $numero = str_replace(')', '', $numero); $numero = str_replace('-', '', $numero); $numero = str_replace(' ', '', $numero);
         $numero = '55'.$numero;
@@ -47,21 +48,20 @@ class ProcessSms implements ShouldQueue
         $curl = curl_init();
 
         curl_setopt_array($curl, [
-            CURLOPT_URL => "https://api.disparopro.com.br/mt",
+            CURLOPT_PORT => "8433",
+            CURLOPT_URL => "https://apihttp.disparopro.com.br:8433/mt",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => "[
-                {
-                    \"numero\": \" ".$numero." \",
-                    \"servico\": \"short\",
-                    \"mensagem\": \" ".$this->sms->mensagem." \",
-                    \"codificacao\": \" ".$codificacao." \"
-                }
-           ]",
+            CURLOPT_POSTFIELDS => json_encode(array(
+                'numero' => $numero,
+                'servico' => 'short',
+                'mensagem' => $this->sms->mensagem,
+                'codificacao' => $codificacao,
+            )),
            CURLOPT_HTTPHEADER => [
                "authorization: Bearer 2aeb694507e66827a9017a498e332ee9958e44cd",
                "content-type: application/json"
@@ -81,9 +81,8 @@ class ProcessSms implements ShouldQueue
            $err = curl_error($curl);
 
            curl_close($curl);
-
            $res = json_decode($response, true);
-
+           \Log::info($res);
            if($res['status'] == 200){
                DisparoMensagem::where('id', $this->sms->id)->update([
                    'status' => 1
