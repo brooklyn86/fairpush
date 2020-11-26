@@ -1,0 +1,8 @@
+[14-Sep-2020 17:27:31 UTC] PHP Fatal error:  Declaration of App\Exceptions\Handler::report(Exception $exception) must be compatible with Illuminate\Foundation\Exceptions\Handler::report(Throwable $e) in /home/fairconsultoria/public_html/novoapp/app/Exceptions/Handler.php on line 8
+[14-Sep-2020 17:27:31 UTC] PHP Fatal error:  Uncaught ReflectionException: Class App\Exceptions\Handler does not exist in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php:809
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php(809): ReflectionClass->__construct('App\\Exceptions\\...')
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php(691): Illuminate\Container\Container->build('App\\Exceptions\\...')
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(796): Illuminate\Container\Container->resolve('App\\Exceptions\\...', Array, false)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php(269): Illuminate\Foundation\Application->resolve('App\\Exceptions\\...', Array, false)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Co in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 811
