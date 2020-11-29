@@ -1465,15 +1465,13 @@ class AppController extends Controller
 
     public function verificaResultadosTelefone(Request $request){
         $input = $request->all();
-
         $sql = Telefones::where('isConsultado', 0)->where('tentativas', '<', 4)->take(10)->get();
-
         if(count($sql) > 0){
             foreach($sql as $dados){
+
                 $response = Curl::to('https://api.totalvoice.com.br/valida_numero/'.$dados->callId)
                     ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
                     ->asJson()->get();
-
                 if($response->status == '200'){
                     if($response->dados->status != 'preparando'){
                         $tentativas = $dados->tentativas;
@@ -1516,13 +1514,12 @@ class AppController extends Controller
 
     public function disparaLigacaoJive(Request $request){
         $input = $request->all();
-
         $telefone = $input['telefone'];
         $telefone = str_replace('(', '', $telefone);
         $telefone = str_replace(')', '', $telefone);
         $telefone = str_replace('-', '', $telefone);
         $telefone = str_replace(' ', '', $telefone);
-
+        
         $sqlToken = DB::table('token')->where('iduser', Auth::user()->id)->get();
 
         if(count($sqlToken) > 0){
@@ -1535,25 +1532,18 @@ class AppController extends Controller
 
                 $response = json_decode($response);
 
-
                 if(isset($response->items) && count($response->items) > 0){
                     $line_id = $response->items[0]->organization->id;
 
-
-                    /*$response = Curl::to('https://api.jive.com/calls/v2/calls')
+                    $response = Curl::to('https://api.jive.com/calls/v2/calls')
                         ->withHeader('Authorization: Bearer '.$dados->access_token.'')
                         ->withContentType('application/json')
-                        ->withData([
-                            'dialString' => '24999765328',
-                            'from' => [
-                                'lineId' => 'a52b5711-785a-4962-be9c-87dd47540b32'
-                            ]
-                         ])->post();
-
-                        dd($response);*/
+                        ->withData(json_encode(array(
+                            'dialString' => $telefone,
+                            'from' => array('lineId' =>$line_id),
+                          )))->post();
 
                         $curl = curl_init();
-
                         curl_setopt_array($curl, [
                           CURLOPT_URL => "https://api.jive.com/calls/v2/calls",
                           CURLOPT_RETURNTRANSFER => true,
@@ -1562,7 +1552,10 @@ class AppController extends Controller
                           CURLOPT_TIMEOUT => 30,
                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                           CURLOPT_CUSTOMREQUEST => "POST",
-                          CURLOPT_POSTFIELDS => "{\n    \"dialString\": \"".$telefone."\",\n    \"from\": {\n      \"lineId\": \"".$line_id."\"\n    }\n  }",
+                          CURLOPT_POSTFIELDS => json_encode(array(
+                              'dialString' => $telefone,
+                              'from' => array('lineId' =>$line_id),
+                            )),
                           CURLOPT_HTTPHEADER => [
                             "authorization: Bearer ".$dados->access_token."",
                             "content-type: application/json"
@@ -1575,7 +1568,7 @@ class AppController extends Controller
                     $res = json_decode($response);
                     curl_close($curl);
 
-
+                   
                     if(isset( $res->errorCode )){
 
                         if( $res->errorCode == 'AUTHN_INVALID_TOKEN' ){
@@ -1690,48 +1683,55 @@ class AppController extends Controller
         $telefoneF = str_replace(')', '', $telefoneF);
         $telefoneF = str_replace('-', '', $telefoneF);
         $telefoneF = str_replace(' ', '', $telefoneF);
-
-        $telefone = new Telefones;
-        $telefone->telefone = $input['telefone'];
-        $telefone->order_id = $input['idprocesso'];
-        $telefone->numeroFormatado = $telefoneF;
-        $telefone->save();
-
-        try{
-            $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
-                ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
-                ->withData([
-                     'numero_destino' => $telefoneF
-                 ])->asJson()->post();
-
-                 if(isset($response->dados->id)){
-                     Telefones::where('id', $telefone->id)->update([
-                         'callId' => $response->dados->id,
-                         'isConsultado' => '0',
-                         'returnStatus' => 'em consulta'
-                     ]);
-                 }
-        }catch(\Exception $e){
-
+        $hasTelefone = Telefones::where('telefone', $input['telefone'])->where('order_id', $input['idprocesso'])->first();
+        if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+            $telefone = new Telefones;
+            $telefone->telefone = $input['telefone'];
+            $telefone->order_id = $input['idprocesso'];
+            $telefone->numeroFormatado = $telefoneF;
+            $telefone->save();
+    
+            try{
+                $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                    ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
+                    ->withData([
+                         'numero_destino' => $telefoneF
+                     ])->asJson()->post();
+                     if(isset($response->dados->id)){
+                         Telefones::where('id', $telefone->id)->update([
+                             'callId' => $response->dados->id,
+                             'isConsultado' => '0',
+                             'returnStatus' => 'em consulta'
+                         ]);
+                     }
+            }catch(\Exception $e){
+    
+            }
+    
+            try{
+               DB::table('movimentacoes')->insert([
+                 'idfuncionario' => Auth::user()->id,
+                 'idtipo' => 3,
+                 'created_at' => DB::raw('now()')
+               ]);
+            }catch(\Exception $e){
+    
+            }
+    
+            return response()->json([
+                'status' => 'ok',
+                'telefone' => $telefone->telefone,
+                'telefoneFormat' => $telefoneF,
+                'returnStatus' => $telefone->returnStatus,
+                'id' => $telefone->id
+            ]);
+        }else{
+            return response()->json([
+                'status' => 'erro',
+                'mensagem' => "Telefone já se encontra cadastrado neste processo!"
+            ]);
         }
-
-        try{
-           DB::table('movimentacoes')->insert([
-             'idfuncionario' => Auth::user()->id,
-             'idtipo' => 3,
-             'created_at' => DB::raw('now()')
-           ]);
-        }catch(\Exception $e){
-
-        }
-
-        return response()->json([
-            'status' => 'ok',
-            'telefone' => $telefone->telefone,
-            'telefoneFormat' => $telefoneF,
-            'returnStatus' => $telefone->returnStatus,
-            'id' => $telefone->id
-        ]);
+       
     }
 
     public function excluirTelefone($id){
@@ -1745,7 +1745,8 @@ class AppController extends Controller
 
     public function postSalvarEmail(Request $request){
         $input = $request->all();
-
+        $hasEmail = Emails::where('email', $input['email'])->where('order_id', $input['idprocesso'])->first();
+        if(is_null($hasEmail) || empty($hasEmail) || !$hasEmail){
         $email = new Emails;
         $email->email = $input['email'];
         $email->order_id = $input['idprocesso'];
@@ -1756,6 +1757,12 @@ class AppController extends Controller
             'email' => $email->email,
             'id' => $email->id
         ]);
+        }else{
+            return response()->json([
+                'status' => 'erro',
+                'mensagem' => "E-mail já se encontra cadastrado neste processo!"
+            ]);
+        }
     }
 
     public function excluirEmail($id){

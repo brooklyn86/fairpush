@@ -1565,9 +1565,10 @@
    <script src="/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
    <script src="/assets/js/app.js"></script>
-
+   <script src="https://momentjs.com/downloads/moment.js"></script>
    <script type="text/javascript">
         $(document).ready(function(e){
+            setInterval(validaNumeros, 60000);
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1596,7 +1597,32 @@
 
                 }
             });
+            validaNumeros();
+            function validaNumeros(){
+                try {
+                    var time = localStorage.getItem('validaNumero');
+                    var oldTime = moment(time).fromNow();
+                    var timeFilter = oldTime.split(" ");
+                    if(timeFilter[0] == 'a' && timeFilter[1] == 'minute' && timeFilter[1] == 'ago' || timeFilter[0] >= 1 && timeFilter[1] == 'minutes'){
+                        console.log('Rodando cron validação telefone')
+                        localStorage.removeItem('validaNumero')
+                        $.ajax({
+                            url: '/app/cron/verifica-resultados-telefone',
+                            method: 'GET',
+                            success: function(res){
 
+                            },error: function(){
+
+                            },complete: function(){
+
+                            }
+                        });
+                    }
+                } catch (error) {
+                    
+                }
+
+            }
             $('body').on('click', '.mac_excluir_item', function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -3257,7 +3283,7 @@
                     element.show();
                     return false;
                 }
-
+                localStorage.setItem('validaNumero', moment().format());
                 $.ajax({
                     url: '/app/agenda/salvar-telefone',
                     method: 'POST',
@@ -3285,10 +3311,11 @@
                                 '</td>'+
                             '</tr>');
                         }else{
+                            $('input[name=mepAdicionarTelefoneText]').val('');
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Erro',
-                                text: 'Ocorreu um erro ao cadastrar o telefone. Atualize a página e tente novamente'
+                                text: res.mensagem
                             });
                         }
                     },error: function(err){
@@ -3347,10 +3374,11 @@
                                 '</td>'+
                             '</tr>');
                         }else{
+                            $('input[name=mepAdicionarEmailText]').val('')
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Erro',
-                                text: 'Ocorreu um erro ao cadastrar o email. Atualize a página e tente novamente'
+                                text: res.mensagem
                             });
                         }
                     },error: function(err){
