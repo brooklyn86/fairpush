@@ -7,6 +7,7 @@
         <h3>FairConsultoria</h3>
     </div>
     <!-- /Header Title -->
+    @can('isAdmin')
 
     <ul class="nav user-menu" style="float:left !important;">
         <li class="nav-item dropdown has-arrow main-drop">
@@ -24,9 +25,11 @@
             </div>
         </li>
     </ul>
+    @endcan
+
     <!-- Header Menu -->
     <ul class="nav user-menu">
-
+        @can('isAdmin')
         <li class="nav-item dropdown">
             <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
                 <span>Administração</span>
@@ -36,7 +39,7 @@
                 <a class="dropdown-item" href="/app/logout">Sair</a>
             </div>
         </li>
-
+        @endcan
         <!-- Notifications -->
         <li class="nav-item dropdown">
             <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
@@ -118,6 +121,7 @@
                 <li>
                     <a href="/app/dashboard"><i class="la la-dashboard"></i> <span>Dashboard</span></a>
                 </li>
+                @can('isAdmin')
                 <li class="submenu">
                     <a href="#"><i class="la la-dashboard"></i> <span> Administração</span> <span class="menu-arrow"></span></a>
                     <ul style="display: none;">
@@ -127,6 +131,8 @@
                         <li><a href="/app/sms/index">SMS</a></li>
                     </ul>
                 </li>
+                @endcan
+                @can('isAdmin')
                 <li class="submenu">
                     <a href="#"><i class="la la-dashboard"></i> <span> Robo</span> <span class="menu-arrow"></span></a>
                     <ul style="display: none;">
@@ -134,7 +140,7 @@
                         
                     </ul>
                 </li>
-
+                @endcan
             </ul>
         </div>
     </div>

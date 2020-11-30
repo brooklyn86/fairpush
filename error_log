@@ -6,3 +6,43 @@ Stack trace:
 #2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(796): Illuminate\Container\Container->resolve('App\\Exceptions\\...', Array, false)
 #3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php(269): Illuminate\Foundation\Application->resolve('App\\Exceptions\\...', Array, false)
 #4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Co in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 811
+[30-Nov-2020 23:10:36 UTC] PHP Warning:  Uncaught ErrorException: Array to string conversion in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php:35
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8, 'Array to string...', '/home/fairconsu...', 35, Array)
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): require()
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(416): Illuminate\Routing\RouteFileRegistrar->register(Array)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(374): Illuminate\Routing\Router->loadRoutes(Array)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteRegistrar.php(121): Illuminate\Routing\Router->gro in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:10:36 UTC] PHP Fatal error:  Illuminate\Routing\RouteFileRegistrar::register(): Failed opening required 'Array' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:10:49 UTC] PHP Warning:  Uncaught ErrorException: Array to string conversion in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php:35
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8, 'Array to string...', '/home/fairconsu...', 35, Array)
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): require()
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(416): Illuminate\Routing\RouteFileRegistrar->register(Array)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(374): Illuminate\Routing\Router->loadRoutes(Array)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteRegistrar.php(121): Illuminate\Routing\Router->gro in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:10:49 UTC] PHP Fatal error:  Illuminate\Routing\RouteFileRegistrar::register(): Failed opening required 'Array' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:13:05 UTC] PHP Warning:  Uncaught ErrorException: Array to string conversion in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php:35
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8, 'Array to string...', '/home/fairconsu...', 35, Array)
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): require()
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(416): Illuminate\Routing\RouteFileRegistrar->register(Array)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(374): Illuminate\Routing\Router->loadRoutes(Array)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteRegistrar.php(121): Illuminate\Routing\Router->gro in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:13:05 UTC] PHP Fatal error:  Illuminate\Routing\RouteFileRegistrar::register(): Failed opening required 'Array' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:16:02 UTC] PHP Warning:  Uncaught ErrorException: Array to string conversion in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php:35
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8, 'Array to string...', '/home/fairconsu...', 35, Array)
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): require()
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(416): Illuminate\Routing\RouteFileRegistrar->register(Array)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(374): Illuminate\Routing\Router->loadRoutes(Array)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteRegistrar.php(121): Illuminate\Routing\Router->gro in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:16:02 UTC] PHP Fatal error:  Illuminate\Routing\RouteFileRegistrar::register(): Failed opening required 'Array' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:17:14 UTC] PHP Warning:  Uncaught ErrorException: Array to string conversion in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php:35
+Stack trace:
+#0 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8, 'Array to string...', '/home/fairconsu...', 35, Array)
+#1 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php(35): require()
+#2 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(416): Illuminate\Routing\RouteFileRegistrar->register(Array)
+#3 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/Router.php(374): Illuminate\Routing\Router->loadRoutes(Array)
+#4 /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteRegistrar.php(121): Illuminate\Routing\Router->gro in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35
+[30-Nov-2020 23:17:14 UTC] PHP Fatal error:  Illuminate\Routing\RouteFileRegistrar::register(): Failed opening required 'Array' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/fairconsultoria/public_html/novoapp/vendor/laravel/framework/src/Illuminate/Routing/RouteFileRegistrar.php on line 35

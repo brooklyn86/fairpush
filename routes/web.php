@@ -32,7 +32,6 @@ Route::prefix('app')->group(function(){
     Route::get('cron/verifica-resultados-telefone', 'AppController@verificaResultadosTelefone');
     Route::get('dispara-ligacao', 'AppController@disparaLigacaoJive');
 
-    Route::get('seleciona-tipo-agenda', 'AppController@selecionaTipoAgenda');
     Route::get('dashboard', 'AppController@viewDashboard')->name('app.dashboard');
 
     /*Funções Agenda */
@@ -72,7 +71,20 @@ Route::prefix('app')->group(function(){
     Route::get('meus-dados', 'AppController@viewMeusDados');
     Route::post('meus-dados', 'AppController@postMeusDados');
     Route::get('logout', 'AppController@logout');
+    
+    //Tipos de Agenda
+    Route::get('agendas/trasferir-processos', 'AppController@viewTransferirProcessos')->name('app.agendas.transferirProcessos');
+    Route::get('agendas/recuperar-subtipo-ajax/{id}', 'AppController@recuperaSubTipoAjax')->name('app.agendas.recuperarSubtipoAjax');
 
+    Route::get('sms/get-sms/{id}', 'AppController@getSms')->name('app.sms.getsms');
+    Route::get('sms/recupera-telefones-agenda/{idprocesso}', 'AppController@recuperaTelefonesAgenda');
+    Route::post('sms/dispara-sms', 'AppController@disparaSms');
+
+
+});
+Route::middleware(['checkAdmin'])->prefix('app')->group(function(){
+    Route::get('seleciona-tipo-agenda', 'AppController@selecionaTipoAgenda');
+    
     //Setores
     Route::get('setores/index', 'AppController@viewSetoresIndex')->name('app.setores.index');
     Route::get('setores/editar/{id}', 'AppController@viewEditarSetor')->name('app.setores.editar');
@@ -95,8 +107,6 @@ Route::prefix('app')->group(function(){
     Route::get('agendas/editar/{id}', 'AppController@viewEditarAgenda')->name('app.agendas.vieweditar');
     Route::post('agendas/editar/{id}', 'AppController@postEditarAgenda')->name('app.agendas.posteditar');
     Route::get('app/agendas/excluir/{id}', 'AppController@excluirAgenda')->name('app.agendas.excluir');
-    Route::get('agendas/trasferir-processos', 'AppController@viewTransferirProcessos')->name('app.agendas.transferirProcessos');
-    Route::get('agendas/recuperar-subtipo-ajax/{id}', 'AppController@recuperaSubTipoAjax')->name('app.agendas.recuperarSubtipoAjax');
 
     Route::get('sms/index', 'AppController@viewSmsIndex')->name('app.sms.index');
     Route::get('sms/cadastrar', 'AppController@viewCadastrarSms')->name('app.sms.viewcadastrar');
@@ -104,9 +114,6 @@ Route::prefix('app')->group(function(){
     Route::get('sms/editar/{id}', 'AppController@viewEditarSms')->name('app.sms.vieweditar');
     Route::post('sms/editar/{id}', 'AppController@postEditarSms')->name('app.sms.posteditar');
     Route::get('sms/excluir/{id}', 'AppController@excluirSms')->name('app.sms.excluir');
-    Route::get('sms/get-sms/{id}', 'AppController@getSms')->name('app.sms.getsms');
-    Route::get('sms/recupera-telefones-agenda/{idprocesso}', 'AppController@recuperaTelefonesAgenda');
-    Route::post('sms/dispara-sms', 'AppController@disparaSms');
 
     # Rotas para o novo robo
     Route::get('robo/extrair-cadernos', 'NovoRoboController@viewExtrairCadernos');

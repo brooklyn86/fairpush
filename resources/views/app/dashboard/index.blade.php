@@ -224,6 +224,8 @@
                   <div class="form-group form-focus focused">
                      <select name="filtroValorPrecatorio" id="filtroValorPrecatorio" class="form-control floating">
                         <option value=""># Selecione o valor do precatório</option>
+						<option value="50000.00">Até R$ 50.000,00</option>
+						<option value="99999.99">Até R$ 100.000,00</option>
                         <option value="100000.00">Acima de R$ 100.000,00</option>
                         <option value="200000.00">Acima de R$ 200.000,00</option>
                         <option value="300000.00">Acima de R$ 300.000,00</option>
@@ -479,10 +481,11 @@
                 <ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded nav-justified">
                     <li class="nav-item"><a class="nav-link active" href="#tabDadosProcesso" data-toggle="tab">Dados do Processo</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabCalculadora" data-toggle="tab">Calculadora</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tabAgendamentoContato" data-toggle="tab">Agendamento de Contato</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tabAgendamentoContato" data-toggle="tab">Agendar de Contato</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabDocumentos" data-toggle="tab">Documentos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabContratos" data-toggle="tab">Gerar Contratos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabCedentes" data-toggle="tab">Cadastrar Cedentes</a></li>
+					<li class="nav-item"><a class="nav-link" href="#tabCarta" data-toggle="tab">Carta</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane show active" id="tabDadosProcesso">
@@ -1094,6 +1097,13 @@
                             </div>
                         </div>
                     </div>
+					<div class="tab-pane" id="tabCarta">
+					<div class="card flex-fill">
+					        <div class="card-header">
+                                <h5 class="card-title mb-0">Gerar Carta Cliente</h5>
+                            </div>
+					</div>
+					</div>
                     <div class="tab-pane" id="tabCedentes">
                         <div class="card flex-fill">
                             <div class="card-header">
@@ -1374,8 +1384,9 @@
             </div>
             <div class="modal-footer" style="justify-content: flex-end;">
                 <button type="button" id="abrirSms" class="btn  btn-outline-dark btn-sm">Guia SMS</button>
+                @can('isAdmin')
                 <button type="button" id="abrirSms" class="btn btn-secondary btn-sm"><span id="mepDataUltimaAbertura"></span></button>
-
+                @endcan
             </div>
         </div>
     </div>
@@ -2901,12 +2912,6 @@
 
             });
 
-            $('body').on('click', '.clickLigarApi', function(e){
-                var telefone = $(this).attr('data-telefone');
-
-                window.open('https://novoapp.fairconsultoria.com.br/app/dispara-ligacao?telefone='+telefone, '_blank');
-            });
-
 
             $('body').on('click', '.clickEditar', function(e){
                 var id = $(this).attr('data-id');
@@ -3029,7 +3034,6 @@
                                         '<div class="dropdown-menu dropdown-menu-right">'+
                                             '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
                                             '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
-                                            '<a class="dropdown-item clickLigarApi" href="#" data-id="'+val.id+'" data-telefone="'+val.telefone+'"><i class="fa fa-phone m-r-5"></i> Ligar Jive</a>'+
                                         '</div>'+
                                     '</div>'+
                                 '</td>'+
@@ -3305,7 +3309,6 @@
                                         '<div class="dropdown-menu dropdown-menu-right">'+
                                             '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+res.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
                                             '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+res.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
-                                            '<a class="dropdown-item clickLigarApi" href="#" data-id="'+res.id+'" data-telefone="'+res.telefone+'"><i class="fa fa-phone m-r-5"></i> Ligar Jive</a>'+
                                         '</div>'+
                                     '</div>'+
                                 '</td>'+

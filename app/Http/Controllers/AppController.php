@@ -746,6 +746,10 @@ class AppController extends Controller
                 ->leftJoin('tipo_agenda', 'tipo_agenda.id','=','subtipo_agenda.idTipoAgenda')
                 ->select('processos.*', 'users.backgroundColor', 'users.textColor', 'users.id as userid', 'subtipo_agenda.titulo as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
                 ->where(function($query) use ($input) {
+                    if(auth()->user()->role_id != User::ADMIN){
+                        $query->where('processos.user_id',auth()->user()->id);
+                    }
+
                     if(isset($input['tipoAgenda']) && $input['tipoAgenda'] != ''){
                         $query->where('tipo_agenda.id', $input['tipoAgenda']);
                     }
