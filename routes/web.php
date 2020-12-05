@@ -46,7 +46,9 @@ Route::prefix('app')->group(function(){
     Route::get('agenda/recupera-dados-e-comentarios/{idprocesso}', 'AppController@recuperaDadoseComentariosByProcessoId');
 
     Route::post('agenda/enviar-chat', 'AppController@postEnviarChat');
+    Route::get('agenda/capturaCpf/contatos', 'AppController@postAtualizaCPF');
     Route::post('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
+    Route::get('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
     Route::post('agenda/salvar-email', 'AppController@postSalvarEmail');
     Route::get('agenda/excluir-telefone/{id}', 'AppController@excluirTelefone');
     Route::get('agenda/excluir-email/{id}', 'AppController@excluirEmail');
@@ -71,7 +73,7 @@ Route::prefix('app')->group(function(){
     Route::get('meus-dados', 'AppController@viewMeusDados');
     Route::post('meus-dados', 'AppController@postMeusDados');
     Route::get('logout', 'AppController@logout');
-    
+
     //Tipos de Agenda
     Route::get('agendas/trasferir-processos', 'AppController@viewTransferirProcessos')->name('app.agendas.transferirProcessos');
     Route::get('agendas/recuperar-subtipo-ajax/{id}', 'AppController@recuperaSubTipoAjax')->name('app.agendas.recuperarSubtipoAjax');
@@ -84,7 +86,7 @@ Route::prefix('app')->group(function(){
 });
 Route::middleware(['checkAdmin'])->prefix('app')->group(function(){
     Route::get('seleciona-tipo-agenda', 'AppController@selecionaTipoAgenda');
-    
+
     //Setores
     Route::get('setores/index', 'AppController@viewSetoresIndex')->name('app.setores.index');
     Route::get('setores/editar/{id}', 'AppController@viewEditarSetor')->name('app.setores.editar');

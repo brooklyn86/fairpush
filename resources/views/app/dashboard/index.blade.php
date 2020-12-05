@@ -166,14 +166,12 @@
 
 					<div class="col-12 text-left">
                         <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                            @if ($role_id == 1)
-        						<!-- <a href="#" class="btn btn-white float-left ml-2" data-toggle="modal" data-target="#modalNovoProcesso">
-                                    <i class="fa fa-plus"></i> Criar novo processo
-                                </a> -->
-                            @endif
+                            <a href="#" style="cursor:'point';background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" class="btn btn-warning text-white float-left" data-toggle="modal" data-target="#modalNovoProcesso">
+                                <i class="fa fa-plus"></i> Criar novo processo
+                            </a>
 
-                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-warning text-white float-left" id="abre_filtros_agenda" data-toggle="modal" data-target="#modalFiltroTipoAgenda">
-                                <i class="la la-filter"></i> Alterar Tipo de Agenda
+                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="abre_filtros_agenda" data-toggle="modal" data-target="#modalFiltroTipoAgenda">
+                                <i class="la la-filter"></i> Alterar tipo de agenda
                             </a>
 
                             <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="toggleFiltrosTexto">
@@ -181,7 +179,7 @@
                             </a>
 
                             <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="agendaAtual">
-                                Agenda Atual: <span id="textoAgendaAtual"></span>
+                                Agenda Atual: <span id="textoAgendaAtual">Todos</span>
                             </a>
                         </div>
 
@@ -202,7 +200,7 @@
                      <label class="focus-label">Número do Processo</label>
                   </div>
                </div>
-               <div class="col-sm-6 col-md-3">
+               <div class="col-sm-6 col-md-2">
                   <div class="form-group form-focus focused">
                      <select name="filtroIdFuncionario" id="filtroIdFuncionario" class="form-control floating">
                         <option value=""># Selecione um funcionário para filtrar</option>
@@ -220,23 +218,30 @@
                      <label class="focus-label">Funcionário</label>
                   </div>
                </div>
+               <div class="col-sm-2 col-md-1">
+                  <div class="form-group form-focus focused">
+                     <select name="filtroTypeValorPrecatorio" id="filtroTypeValorPrecatorio" class="form-control floating">
+						<option value="0">Acima</option>
+						<option value="1">Até</option>
+                     </select>
+                  </div>
+               </div>
                <div class="col-sm-6 col-md-3">
                   <div class="form-group form-focus focused">
                      <select name="filtroValorPrecatorio" id="filtroValorPrecatorio" class="form-control floating">
                         <option value=""># Selecione o valor do precatório</option>
-						<option value="50000.00">Até R$ 50.000,00</option>
-						<option value="99999.99">Até R$ 100.000,00</option>
-                        <option value="100000.00">Acima de R$ 100.000,00</option>
-                        <option value="200000.00">Acima de R$ 200.000,00</option>
-                        <option value="300000.00">Acima de R$ 300.000,00</option>
-                        <option value="400000.00">Acima de R$ 400.000,00</option>
-                        <option value="500000.00">Acima de R$ 500.000,00</option>
-                        <option value="750000.00">Acima de R$ 700.000,00</option>
-                        <option value="1000000.00">Acima de R$ 1.000.000,00</option>
-                        <option value="1250000.00">Acima de R$ 1.250.000,00</option>
-                        <option value="1500000.00">Acima de R$ 1.500.000,00</option>
-                        <option value="1750000.00">Acima de R$ 1.750.000,00</option>
-                        <option value="2000000.00">Acima de R$ 2.000.000,00</option>
+						<option value="50000.00">R$ 50.000,00</option>
+                        <option value="100000.00">R$ 100.000,00</option>
+                        <option value="200000.00"> R$ 200.000,00</option>
+                        <option value="300000.00"> R$ 300.000,00</option>
+                        <option value="400000.00"> R$ 400.000,00</option>
+                        <option value="500000.00"> R$ 500.000,00</option>
+                        <option value="750000.00"> R$ 700.000,00</option>
+                        <option value="1000000.00"> R$ 1.000.000,00</option>
+                        <option value="1250000.00"> R$ 1.250.000,00</option>
+                        <option value="1500000.00"> R$ 1.500.000,00</option>
+                        <option value="1750000.00"> R$ 1.750.000,00</option>
+                        <option value="2000000.00"> R$ 2.000.000,00</option>
                      </select>
                   </div>
                </div>
@@ -384,6 +389,8 @@
 
                             </div>
 
+                            <input type="hidden" name="sms_idprocesso">
+
                             <div class="mb-3 mt-3"><button type="button" id="enviarSms" class="btn btn-success">Enviar SMS</button></div>
                         </div>
                     </div>
@@ -526,6 +533,10 @@
                         						<div class="form-group">
                         							<label>CPF</label>
                         							<input class="form-control" type="text" name="mepCpf" id="mepCpf" readonly="readonly">
+                                                    <span class="input-group-addon" id="atualizaCPF" >Atualizar Contatos</span> 
+                                                    <div class="spinner-border spinner-border-sm hidden" id="loadingCPF" role="status" hidden>
+                                                        <span class="sr-only">Loading...</span>
+                                                    </div>
                         						</div>
                         					</div>
                                         </div>
@@ -601,7 +612,7 @@
 
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" name="btnSalvarEdicao" id="btnSalvarEdicao" class="btn btn-primary submit-btn" style="display: none;">Salvar Edição</button>
+                                                <button type="button" name="btnSalvarEdicao" id="btnSalvarEdicao" class="btn btn-primary submit-btn" >Salvar Edição</button>
                                             </div>
                                         </div>
 
@@ -1394,12 +1405,11 @@
 <!-- Fim do Editar Processo -->
 
 <!-- Modal Filtro de Tipo de Agenda -->
-<div id="modalFiltroTipoAgenda" class="modal custom-modal fade" role="dialog">
+<div id="modalFiltroTipoAgenda" class="modal custom-modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Selecionar o Tipo de Agenda</h4>
-				<button type="button" class="close" data-dismiss="modal">&times;</button>
 			</div>
 			<div class="modal-body">
 
@@ -1445,7 +1455,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Adicionar Processo manualmente</h4>
+                <h4 class="modal-title">Adicionar Processo</h4>
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
 			</div>
 			<div class="modal-body">
@@ -1527,6 +1537,13 @@
 
                     </div>
                 </div>
+                <div class="row">
+                    <div class="form-group col-sm-12">
+                        <label>Tipo da Agenda</label>
+                        {{ Form::select('mnpTipoProcesso', $arrayTiposAgenda, null, ['class' => 'custom-select']) }}
+
+                    </div>
+                </div>
 
                 <div class="submit-section">
 					<button class="btn btn-primary submit-btn" type="button" id="mnpBtnSalvar">Salvar Processo</button>
@@ -1580,6 +1597,7 @@
    <script type="text/javascript">
         $(document).ready(function(e){
             setInterval(validaNumeros, 60000);
+            $('#modalFiltroTipoAgenda').modal('show');
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1630,10 +1648,71 @@
                         });
                     }
                 } catch (error) {
-                    
+
                 }
 
             }
+            $('#atualizaCPF').click(function(e){
+                var cpf = $('#mepCpf').val();
+                var idProcesso = $('#mepIdProcesso').val();
+                $('#loadingCPF').removeAttr('hidden')
+                localStorage.setItem('validaNumero', moment().format());
+                $.ajax({
+                    url: 'agenda/capturaCpf/contatos?cpf='+cpf.replace(/[^\d]+/g,'')+'&idProcesso='+idProcesso,
+                    method: 'GET',
+                    success: function(res){
+                        $.each(res.telefones,function(index,val){
+                            $('#tbodyTelefones').append('<tr>'+
+                                '<td>'+val.telefone+'</td>'+
+                                '<td><span class="badge badge-primary">Em Consulta</span></td>'+
+                                '<td class="text-right">'+
+                                    '<div class="dropdown dropdown-action">'+
+                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
+                                            '<i class="material-icons">more_vert</i>'+
+                                        '</a>'+
+                                        '<div class="dropdown-menu dropdown-menu-right">'+
+                                            '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</td>'+
+                            '</tr>');
+                        });
+                        $.each(res.emails,function(index,val){
+                            $('#tbodyEmails').append('<tr>'+
+                                '<td>'+val.email+'</td>'+
+                                '<td class="text-right">'+
+                                    '<div class="dropdown dropdown-action">'+
+                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
+                                            '<i class="material-icons">more_vert</i>'+
+                                        '</a>'+
+                                        '<div class="dropdown-menu dropdown-menu-right">'+
+                                            '<a class="dropdown-item clickExcluirEmail" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</td>'+
+                            '</tr>');
+                        });
+                        $('#loadingCPF').attr('hidden',true);
+                        Swal.fire({
+                        icon: 'success',
+                        title: 'Atualizado',
+                        text: 'A lista de telefone e e-mail foi atualizada',
+                    });
+                    },error: function(){
+                        $('#loadingCPF').attr('hidden',true);
+                        Swal.fire({
+                        icon: 'error',
+                        title: 'Falha ao se comunicar com api!',
+                        text: 'Por favor tente novamente!',
+                    });
+                    },complete: function(){
+                        // element.removeAttr('disabled');
+                    }
+                });
+
+            });
+
             $('body').on('click', '.mac_excluir_item', function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -1671,7 +1750,6 @@
                         comentario: $('#mac_observacao').val(),
                         idprocesso: $('#mepIdProcesso').val()
                     },success: function(res){
-                        console.log(res);
                         if(res.status == 'ok'){
                             $('#mac_mostra_alert').html('<div class="alert alert-success">Notificação salva com sucesso</div>');
 
@@ -1712,11 +1790,9 @@
                     data: {
                         mensagem: $('#sms_idMensagem').val(),
                         numeros: array,
-                        isFlashSms: isFlashSms
+                        isFlashSms: isFlashSms,
+                        idprocesso: $('input[name=sms_idprocesso]').val()
                     },success: function(res){
-                        console.log('sucesso');
-                        console.log(res);
-
                         if(res.status == 'ok'){
                             Swal.fire({
                                 icon: 'success',
@@ -1731,10 +1807,7 @@
                             });
                         }
                     },error: function(err){
-                        console.log('erro');
-                        console.log(err);
                     },complete: function(){
-                        console.log('complete');
                         element.removeAttr('disabled')
                     }
                 });
@@ -1751,10 +1824,6 @@
                         isPhoneSelected = true;
                     }
                 });
-
-                console.log(isPhoneSelected);
-                console.log(selectedMensagem);
-
                 if(isPhoneSelected == true && selectedMensagem != ''){
                     $('#enviarSms').removeAttr('disabled');
                 }
@@ -1763,6 +1832,8 @@
             /* SMS */
             $('#abrirSms').click(function(e){
                 var idprocesso = $('#mepIdProcesso').val();
+
+                $('input[name=sms_idprocesso]').val(idprocesso);
                 $('#sms_listaTelefones').html('');
                 $.ajax({
                     url: '/app/sms/recupera-telefones-agenda/' + idprocesso,
@@ -1892,7 +1963,39 @@
                   });
                }
             });
+            $('#filtroTypeValorPrecatorio').change(function(e){
+                if( $(this).val() == '' ){
+                    $('.divProcesso').each(function(e){
+                        $(this).show();
+                    });
+                }else{
+                    var valor = $('#filtroValorPrecatorio option:selected').val();
+                    var type = $('#filtroTypeValorPrecatorio option:selected').val();
 
+                    $('.divProcesso').each(function(e){
+                        var dataValorPrecatorio = $(this).attr('data-valorprecatorio');
+                        var dataUserId = $(this).attr('data-userid');
+
+                        dataValorPrecatorio = parseFloat(dataValorPrecatorio);
+                        valor = parseFloat(valor);
+                        var idfuncionario = $('#filtroIdFuncionario option:selected').val();
+                        if(type == 0){
+                            if( dataValorPrecatorio > valor && dataUserId ==  idfuncionario){
+                                $(this).show();
+                            }else{
+                                $(this).hide();
+                            }
+                        }else{
+                            if( dataValorPrecatorio <= valor && dataUserId ==  idfuncionario){
+                                $(this).show();
+                            }else{
+                                $(this).hide();
+                            }
+                        }
+
+                    })
+                }
+            });
             $('#filtroValorPrecatorio').change(function(e){
                 if( $(this).val() == '' ){
                     $('.divProcesso').each(function(e){
@@ -1900,20 +2003,47 @@
                     });
                 }else{
                     var valor = $('#filtroValorPrecatorio option:selected').val();
+                    var type = $('#filtroTypeValorPrecatorio option:selected').val();
 
                     $('.divProcesso').each(function(e){
                         var dataValorPrecatorio = $(this).attr('data-valorprecatorio');
+                        var dataUserId = $(this).attr('data-userid');
 
                         dataValorPrecatorio = parseFloat(dataValorPrecatorio);
                         valor = parseFloat(valor);
 
-                        /*console.log(dataValorPrecatorio);
-                        console.log(valor);*/
-                        if( dataValorPrecatorio > valor ){
-                           $(this).show();
+                        var idfuncionario = $('#filtroIdFuncionario option:selected').val();
+                        if(idfuncionario != ''){
+                            if(type == 0){
+                                if( dataValorPrecatorio > valor && dataUserId ==  idfuncionario){
+                                    $(this).show();
+                                }else{
+                                    $(this).hide();
+                                }
+                            }else{
+                                if( dataValorPrecatorio <= valor && dataUserId ==  idfuncionario){
+                                    $(this).show();
+                                }else{
+                                    $(this).hide();
+                                }
+                            }
                         }else{
-                           $(this).hide();
+                            if(type == 0){
+                                if( dataValorPrecatorio > valor ){
+                                    $(this).show();
+                                }else{
+                                    $(this).hide();
+                                }
+                            }else{
+                                if( dataValorPrecatorio <= valor ){
+                                    $(this).show();
+                                }else{
+                                    $(this).hide();
+                                }
+                            }
                         }
+
+
                     })
                 }
             });
@@ -2053,7 +2183,6 @@
         			placeholder: "drag-placeholder",
                     stop: function(event, ui){
                         var targetList = $(this);
-        				console.log('Target ID: ' + targetList.attr('id'));
 
         				if( targetList.attr('id') != 'divExcluirProcesso'){
                             $('#divExcluirProcesso').css('opacity', '0');
@@ -2071,7 +2200,6 @@
 
         				//destino
                 		var targetList = $(this);
-        				console.log('RECEIVE' + targetList.attr('id'));
 
         				if( targetList.attr('id') != 'divExcluirProcesso'){
                             $('#divExcluirProcesso').css('opacity', '0');
@@ -2085,13 +2213,9 @@
         							'novobox': targetList.attr('id')
         						},
         						success: function(res){
-        							console.log('sucesso');
-        							console.log(res)
+        							
         						},error: function(err){
-        							console.log('erro');
-        							console.log(err)
         						},complete: function(){
-        							console.log('complete');
         						}
         					});
         				}else if( targetList.attr('id') == 'divExcluirProcesso'){
@@ -2131,10 +2255,6 @@
 
             var u_filtroTipoProcesso = $('input[name=u_filtroTipoProcesso]').val();
             var u_filtroSubtipoProcesso = $('input[name=u_filtroSubtipoProcesso]').val();
-
-            console.log(u_filtroTipoProcesso);
-            console.log(u_filtroSubtipoProcesso);
-
             $('#filtroTipoProcesso').change(function(e){
                 tipoAgenda = $(this).val();
 
@@ -2173,14 +2293,10 @@
                $('#filtroTipoProcesso').val(u_filtroTipoProcesso).trigger('change');
                tipoAgenda = u_filtroTipoProcesso;
 
-               console.log('TipoAgenda = ' + tipoAgenda);
             }
 
             $('#filtroSubtipoProcesso').change(function(e){
                 subtipoAgenda = $(this).val();
-
-                console.log(tipoAgenda);
-                console.log(subtipoAgenda);
             });
 
             $('#btnConfirmarFiltroAgenda').click(function(e){
@@ -2486,12 +2602,14 @@
                         mnpNumeroProcesso: $('input[name=mnpNumeroProcesso]').val(),
                         mnpOrdemCronologica: $('input[name=mnpOrdemCronologica]').val(),
                         mnpExp: $('input[name=mnpExp]').val(),
+                        mnpTipoProcesso: $('select[name=mnpTipoProcesso] option:selected').val(),
                         mnpIndiceDataBase: $('input[name=mnpIndiceDataBase]').val(),
                         mnpValorPrincipal: $('input[name=mnpValorPrincipal]').val(),
                         mnpValorJuros: $('input[name=mnpValorJuros]').val(),
                         mnpColaborador: $('select[name=mnpColaborador] option:selected').val()
                     },
                     success: function(res){
+
                         if( res.status == 'ok' ){
                             $('input[name=mnpCabecaAcao]').val('');
                             $('input[name=mnpNumeroProcesso]').val('');
@@ -2591,7 +2709,7 @@
                     if(res.status == 'ok'){
 
                         $.map( res.response, function( val, i ) {
-                           console.log(val);
+            
                             $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
@@ -2902,8 +3020,7 @@
                             }
                         }
                     },error: function(err){
-                        console.log('err');
-                        console.log(err);
+                        
                     },complete: function(){
                         element.removeAttr('disabled');
                         element.html('Salvar Edição');
@@ -2927,7 +3044,7 @@
                     url: '/app/agenda/recupera-dados-e-comentarios/' + id,
                     method: 'GET',
                     success: function(result){
-                        console.log(result);
+                        
 
                         $('#mepDataUltimaAbertura').html( 'Ultima Abertura: ' + result.data_ultima_abertura );
                         $('#mepIdProcesso').val( result.id );
@@ -3040,7 +3157,6 @@
                             '</tr>');
                         });
                     },error: function(err){
-                        console.log(err);
                     },complete: function(){
 
                     }
@@ -3050,8 +3166,6 @@
                     url: '/app/agenda/recupera-dados-processo/' + id,
                     method: 'GET',
                     success: function(result){
-                        console.log(result);
-                        console.log('sucesso');
 
                         $('#mcAutor').html( result.cabeca_de_acao );
                         $('#mcCedente').html( result.reqte );
@@ -3105,7 +3219,6 @@
 
                         $('#mcTotalBruto').html( result.total_bruto );
                     },error: function(err){
-                        console.log(err);
 
                     }
                 });
@@ -3141,7 +3254,7 @@
                         id: id
                     },
                     success: function(result){
-                        console.log(result);
+                        
 
                         if(result.status == 'ok'){
                             $('#mcResultado1').html(result.taxaBase);
@@ -3234,8 +3347,6 @@
                     cache: false,
                     processData: false,
                     success:function(res){
-                        console.log('sucesso envio arquivo');
-                        console.log(res);
 
                         if(res.status == 'ok'){
                             //$('#tbodyDocumentos').append('<tr><td><a href="/uploads/'+data.arquivo+'" target="_blank">'+data.tituloDocumento+'</a></td><td><button data-id="'+data.id+'" class="btn btn-danger btnExcluirDocumento"><i class="fa fa-trash"></i></button></td></tr>');
@@ -3260,8 +3371,6 @@
 								'</div>');
                         }
                     },error: function(err){
-                        console.log('erro envio arquivo');
-                        console.log(err);
                     },complete: function(data){
                         $('#btnEnviarArquivo').removeAttr('disabled');
                         $('#btnEnviarArquivo').html('Enviar Documento');

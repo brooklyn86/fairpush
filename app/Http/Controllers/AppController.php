@@ -81,13 +81,13 @@ class AppController extends Controller
 
         //dd($input['code']);
         /*
-            ClienteID = cfcd0d0e-312f-47e5-8a96-33e40248a530
+            ClienteID = cf00d760354dfe4b8eab638ba810f667
             ClienteSecret = QzN0gGZsAJzRB50eVgdPnw==
         */
         /*
-        https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&scope=Perfil%20Jive&state=novoapp
+        https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&scope=Perfil%20Jive&state=novoapp
 
-        https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530
+        https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667
   &redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&scope=Jive&state=novoapp
 
         */
@@ -98,7 +98,7 @@ class AppController extends Controller
                 ->withContentType('application/x-www-form-urlencoded')
                 ->withData([
                     'grant_type' => 'authorization_code',
-                    'client_id' => "cfcd0d0e-312f-47e5-8a96-33e40248a530",
+                    'client_id' => "cf00d760354dfe4b8eab638ba810f667",
                     'code' => $input['code'],
                     'redirect_uri' => 'https://novoapp.fairconsultoria.com.br/redirect-api',
                  ])->post();
@@ -299,6 +299,269 @@ class AppController extends Controller
 
     public function viewLogin(){
         return view('app.auth.login');
+    }
+
+    public function postAtualizaCPF(Request $request){
+        $input = $request->all();
+
+        $curl = curl_init();
+        $token = base64_encode('arthur.curti@fairconsultoria.com.br:arthur3126294');
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => "https://api.procob.com/consultas/v2/L0001/". intval($input['cpf']),
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => "",
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => "GET",
+          CURLOPT_HTTPHEADER => array(
+            "authorization: Basic ". $token
+          ),
+        ));
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+          echo "cURL Error #:" . $err;
+        } else {
+          $emailSave = [];
+          $telefoneSave = [];
+          $response = json_decode($response);
+          try {
+            foreach($response->content->emails->conteudo as $email){
+                $hasEmail = Emails::where('email', $email->email)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasEmail) || empty($hasEmail) || !$hasEmail){
+                    $newemail = new Emails;
+                    $newemail->email = $email->email;
+                    $newemail->order_id = $input['idProcesso'];
+                    $newemail->save();
+                    array_push($emailSave,$newemail->toArray());
+                }
+          }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+          try{
+            foreach($response->content->pesquisa_telefones->conteudo->celular as $telefone){
+                $telefoneSF = '';
+                if(strlen($telefone->telefone) % 2 == 0 ){
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, strlen($telefone->telefone) / 2).'-'. substr($telefone->telefone, strlen($telefone->telefone) / 2, strlen($telefone->telefone));
+                }else{
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, 5).'-'. substr($telefone->telefone, 5, strlen($telefone->telefone) );
+                }
+                $hasTelefone = Telefones::where('telefone', $telefoneF)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+
+                    $newtelefone = new Telefones;
+                    $newtelefone->telefone = $telefoneSF;
+                    $newtelefone->order_id = $input['idProcesso'];
+                    $newtelefone->numeroFormatado = $telefone->ddd.$telefone->telefone;
+                    $newtelefone->save();
+                    array_push($telefoneSave,$newtelefone->toArray());
+                    try{
+                        $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withData([
+                                 'numero_destino' =>  $telefone->ddd.$telefone->telefone
+                             ])->asJson()->post();
+        
+                             if(isset($response->dados->id)){
+                                 Telefones::where('id', $newtelefone->id)->update([
+                                     'callId' => $response->dados->id,
+                                     'isConsultado' => '0',
+                                     'returnStatus' => 'em consulta'
+                                 ]);
+                             }
+                    }catch(\Exception $e){
+                        DB::table('teste')->insert([
+                            'campo1' => $e->getMessage()
+                        ]);
+                    }
+        
+                    try{
+                       DB::table('movimentacoes')->insert([
+                         'idfuncionario' => Auth::user()->id,
+                         'idtipo' => 3,
+                         'created_at' => DB::raw('now()')
+                       ]);
+                    }catch(\Exception $e){
+        
+                    }
+                }
+            }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        try{
+            foreach($response->content->pesquisa_telefones->conteudo->fixo as $telefone){
+                $telefoneSF = '';
+                if(strlen($telefone->telefone) % 2 == 0 ){
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, strlen($telefone->telefone) / 2).'-'. substr($telefone->telefone, strlen($telefone->telefone) / 2, strlen($telefone->telefone));
+                }else{
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, 5).'-'. substr($telefone->telefone, 5, strlen($telefone->telefone) );
+                }
+                $hasTelefone = Telefones::where('telefone', $telefoneSF)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+
+                    $newtelefone = new Telefones;
+                    $newtelefone->telefone = $telefoneSF;
+                    $newtelefone->order_id = $input['idProcesso'];
+                    $newtelefone->numeroFormatado = $telefone->ddd.$telefone->telefone;
+                    $newtelefone->save();
+                    array_push($telefoneSave,$newtelefone->toArray());
+
+                    try{
+                        $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withData([
+                                 'numero_destino' => $telefone->ddd.$telefone->telefone
+                             ])->asJson()->post();
+        
+                             if(isset($response->dados->id)){
+                                 Telefones::where('id', $newtelefone->id)->update([
+                                     'callId' => $response->dados->id,
+                                     'isConsultado' => '0',
+                                     'returnStatus' => 'em consulta'
+                                 ]);
+                             }
+                    }catch(\Exception $e){
+                        DB::table('teste')->insert([
+                            'campo1' => $e->getMessage()
+                        ]);
+                    }
+        
+                    try{
+                       DB::table('movimentacoes')->insert([
+                         'idfuncionario' => Auth::user()->id,
+                         'idtipo' => 3,
+                         'created_at' => DB::raw('now()')
+                       ]);
+                    }catch(\Exception $e){
+        
+                    }
+                }
+            }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        try{
+            foreach($response->content->pesquisa_telefones->conteudo->outros as $telefone){
+                $telefoneSF = '';
+                if(strlen($telefone->telefone) % 2 == 0 ){
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, strlen($telefone->telefone) / 2).'-'. substr($telefone->telefone, strlen($telefone->telefone) / 2, strlen($telefone->telefone));
+                }else{
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, 5).'-'. substr($telefone->telefone, 5, strlen($telefone->telefone) );
+                }
+                $hasTelefone = Telefones::where('telefone',  $telefoneSF)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+
+                    $newtelefone = new Telefones;
+                    $newtelefone->telefone = $telefoneSF;
+                    $newtelefone->order_id = $input['idProcesso'];
+                    $newtelefone->numeroFormatado = $telefone->ddd.$telefone->telefone;
+                    $newtelefone->save();
+                    array_push($telefoneSave,$newtelefone->toArray());
+
+                    try{
+                        $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withData([
+                                 'numero_destino' => $telefone->ddd.$telefone->telefone
+                             ])->asJson()->post();
+        
+                             if(isset($response->dados->id)){
+                                 Telefones::where('id', $newtelefone->id)->update([
+                                     'callId' => $response->dados->id,
+                                     'isConsultado' => '0',
+                                     'returnStatus' => 'em consulta'
+                                 ]);
+                             }
+                    }catch(\Exception $e){
+                        DB::table('teste')->insert([
+                            'campo1' => $e->getMessage()
+                        ]);
+                    }
+        
+                    try{
+                       DB::table('movimentacoes')->insert([
+                         'idfuncionario' => Auth::user()->id,
+                         'idtipo' => 3,
+                         'created_at' => DB::raw('now()')
+                       ]);
+                    }catch(\Exception $e){
+        
+                    }
+                }
+            }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        try{
+            foreach($response->content->pesquisa_telefones->conteudo->comercial as $telefone){
+                $telefoneSF = '';
+                if(strlen($telefone->telefone) % 2 == 0 ){
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, strlen($telefone->telefone) / 2).'-'. substr($telefone->telefone, strlen($telefone->telefone) / 2, strlen($telefone->telefone));
+                }else{
+                    $telefoneSF = '('.$telefone->ddd.')'.' '.substr($telefone->telefone, 0, 5).'-'. substr($telefone->telefone, 5, strlen($telefone->telefone) );
+                }
+                $hasTelefone = Telefones::where('telefone', $telefoneSF)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+
+                    $newtelefone = new Telefones;
+                    $newtelefone->telefone = $telefoneSF;
+                    $newtelefone->order_id = $input['idProcesso'];
+                    $newtelefone->numeroFormatado =$telefone->ddd.$telefone->telefone;
+                    $newtelefone->save();
+                    array_push($telefoneSave,$newtelefone->toArray());
+
+                    try{
+                        $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withData([
+                                 'numero_destino' => $telefone->ddd.$telefone->telefone
+                             ])->asJson()->post();
+        
+                             if(isset($response->dados->id)){
+                                 Telefones::where('id', $newtelefone->id)->update([
+                                     'callId' => $response->dados->id,
+                                     'isConsultado' => '0',
+                                     'returnStatus' => 'em consulta'
+                                 ]);
+                             }
+                    }catch(\Exception $e){
+                        DB::table('teste')->insert([
+                            'campo1' => $e->getMessage()
+                        ]);
+                    }
+        
+                    try{
+                       DB::table('movimentacoes')->insert([
+                         'idfuncionario' => Auth::user()->id,
+                         'idtipo' => 3,
+                         'created_at' => DB::raw('now()')
+                       ]);
+                    }catch(\Exception $e){
+        
+                    }
+                }
+            }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+          return response()->json(['emails' => $emailSave, 'telefones' => $telefoneSave]);
+        }
     }
 
     public function postLogin(Request $request){
@@ -663,13 +926,13 @@ class AppController extends Controller
 
     public function agendaCadastrarNovoProcesso(Request $request){
         $input = $request->all();
-
         $rules = [
             'mnpCabecaAcao' => 'required',
             'mnpNumeroProcesso' => 'required',
             'mnpValorPrincipal' => 'required',
             'mnpValorJuros' => 'required',
-            'mnpColaborador' => 'required'
+            'mnpColaborador' => 'required',
+            'mnpTipoProcesso' => 'required'
         ];
 
         $messages = [
@@ -677,7 +940,8 @@ class AppController extends Controller
             'mnpNumeroProcesso.required' => 'Digite o número do processo',
             'mnpValorPrincipal.required' => 'Digite o valor principal',
             'mnpValorJuros.required' => 'Digite o valor dos juros',
-            'mnpColaborador.required' => 'Digite o nome do colaborador'
+            'mnpColaborador.required' => 'Digite o nome do colaborador',
+            'mnpTipoProcesso.required' => 'Informe o Tipo da agenda'
         ];
 
         $validation = Validator::make($input, $rules, $messages);
@@ -701,7 +965,6 @@ class AppController extends Controller
         }else{
             $mnpIndiceDataBase = '1900-01-01';
         }
-
         $processos = new Processos;
         $processos->cabeca_de_acao = $input['mnpCabecaAcao'];
         $processos->ordem_cronologica = $input['mnpOrdemCronologica'];
@@ -712,6 +975,7 @@ class AppController extends Controller
         $processos->principal_bruto = $mnpValorPrincipal;
         $processos->juros_moratorio = $mnpValorJuros;
         $processos->user_id = $input['mnpColaborador'];
+        $processo->idSubtipoAgenda = ($request->mnpTipoProcesso ? $request->mnpTipoProcesso : null );
         $processos->data_base = $mnpIndiceDataBase;
         $processos->data_id = 0;
         $processos->save();
@@ -1452,7 +1716,7 @@ class AppController extends Controller
 
     public function testeValidaNumero(){
         $response = Curl::to('https://api2.totalvoice.com.br/valida_numero')
-            ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
+            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
             ->withData([
                  'numero_destino' => '24999765328'
              ])->asJson()->post();
@@ -1461,7 +1725,7 @@ class AppController extends Controller
     }
     public function buscaValidaNumero(){
         $response = Curl::to('https://api2.totalvoice.com.br/valida_numero/102704636')
-            ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
+            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
             ->asJson()->get();
 
         dd($response);
@@ -1472,9 +1736,8 @@ class AppController extends Controller
         $sql = Telefones::where('isConsultado', 0)->where('tentativas', '<', 4)->take(10)->get();
         if(count($sql) > 0){
             foreach($sql as $dados){
-
                 $response = Curl::to('https://api.totalvoice.com.br/valida_numero/'.$dados->callId)
-                    ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
+                    ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
                     ->asJson()->get();
                 if($response->status == '200'){
                     if($response->dados->status != 'preparando'){
@@ -1523,7 +1786,7 @@ class AppController extends Controller
         $telefone = str_replace(')', '', $telefone);
         $telefone = str_replace('-', '', $telefone);
         $telefone = str_replace(' ', '', $telefone);
-        
+
         $sqlToken = DB::table('token')->where('iduser', Auth::user()->id)->get();
 
         if(count($sqlToken) > 0){
@@ -1572,24 +1835,24 @@ class AppController extends Controller
                     $res = json_decode($response);
                     curl_close($curl);
 
-                   
+
                     if(isset( $res->errorCode )){
 
                         if( $res->errorCode == 'AUTHN_INVALID_TOKEN' ){
-                            return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
+                            return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
                         }
 
                     }else{
 
                     }
                 }else{
-                    /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
-                    return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
+                    /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
+                    return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
                 }
             }
         }else{
-            /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
-            return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
+            /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
+            return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&scopes=users.v1.lines.read%20calls.v2.initiate&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');
         }
     }
 
@@ -1602,7 +1865,7 @@ class AppController extends Controller
         $telefone = str_replace('-', '', $telefone);
         $telefone = str_replace(' ', '', $telefone);
 
-        /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
+        /*return redirect('https://authentication.logmeininc.com/oauth/authorize?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&state='.$telefone.'');*/
 
 
         $sqlToken = DB::table('token')->where('iduser', Auth::user()->id)->get();
@@ -1667,7 +1930,7 @@ class AppController extends Controller
                         $res = json_decode($response);
                         curl_close($curl);
                     }else{
-                        return redirect('https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cfcd0d0e-312f-47e5-8a96-33e40248a530&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&scope=Jive&state=novoapp');
+                        return redirect('https://auth.jive.com/oauth2/v2/grant?response_type=code&client_id=cf00d760354dfe4b8eab638ba810f667&redirect_uri=https://novoapp.fairconsultoria.com.br/redirect-api&scope=Jive&state=novoapp');
                     }
                 }else{
                     return response()->json([]);
@@ -1694,10 +1957,11 @@ class AppController extends Controller
             $telefone->order_id = $input['idprocesso'];
             $telefone->numeroFormatado = $telefoneF;
             $telefone->save();
-    
+
             try{
                 $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
-                    ->withHeader('Access-Token: afeca1d675d6694aa74c87e4e2fb4def')
+                    //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                    ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
                     ->withData([
                          'numero_destino' => $telefoneF
                      ])->asJson()->post();
@@ -1709,9 +1973,11 @@ class AppController extends Controller
                          ]);
                      }
             }catch(\Exception $e){
-    
+                DB::table('teste')->insert([
+                    'campo1' => $e->getMessage()
+                ]);
             }
-    
+
             try{
                DB::table('movimentacoes')->insert([
                  'idfuncionario' => Auth::user()->id,
@@ -1719,9 +1985,9 @@ class AppController extends Controller
                  'created_at' => DB::raw('now()')
                ]);
             }catch(\Exception $e){
-    
+
             }
-    
+
             return response()->json([
                 'status' => 'ok',
                 'telefone' => $telefone->telefone,
@@ -1735,7 +2001,7 @@ class AppController extends Controller
                 'mensagem' => "Telefone já se encontra cadastrado neste processo!"
             ]);
         }
-       
+
     }
 
     public function excluirTelefone($id){
@@ -2185,13 +2451,23 @@ class AppController extends Controller
 
         if(count($input['numeros']) > 0){
             foreach($input['numeros'] as $numero){
+                $sql = DB::table('processos')->where('id', $input['idprocesso'])->get();
+
+                $mensagem = $sql1->mensagem;
+
+                $array_variaveis = ['[[cabeca_de_acao]]', '[[requerente]]'];
+                $array_replace = [$sql[0]->cabeca_de_acao, $sql[0]->reqte];
+
+                $mensagem = str_replace($array_variaveis, $array_replace, $mensagem);
+
                 $disparo = new DisparoMensagem;
-                $disparo->mensagem = $sql1->mensagem;
+                $disparo->mensagem = $mensagem;
                 $disparo->numero = $numero;
                 $disparo->status = 0;
                 $disparo->isFlashSms = $input['isFlashSms'];
+                $disparo->idProcesso = $input['idprocesso'];
                 $disparo->save();
-            
+
                 ProcessSms::dispatch($disparo);
             }
         }

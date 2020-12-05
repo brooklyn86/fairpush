@@ -131,7 +131,7 @@
 
                     success: function(res){
                         if(res.status == 'ok'){
-                            window.location.href = '/app/seleciona-tipo-agenda';
+                            window.location.href = '/app/dashboard';
                         }else{
                             $('#showMessage').html('<div class="alert alert-danger">Email e/ou senha incorretos. Verifique os dados digitados e tente novamente</div>');
                             $('#mensagemAguardando').hide();

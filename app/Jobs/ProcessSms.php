@@ -34,7 +34,8 @@ class ProcessSms implements ShouldQueue
      */
     public function handle()
     {
-
+        
+try{
         $numero = $this->sms->numero;
         $numero = str_replace('(', '', $numero); $numero = str_replace(')', '', $numero); $numero = str_replace('-', '', $numero); $numero = str_replace(' ', '', $numero);
         $numero = '55'.$numero;
@@ -67,22 +68,12 @@ class ProcessSms implements ShouldQueue
                "content-type: application/json"
            ],
        ]);
-
-       /*CURLOPT_POSTFIELDS => "[
-           {
-               \"numero\": \" ".$numero." \",
-               \"servico\": \"short\",
-               \"mensagem\": \" ".$this->sms->mensagem." \",
-               \"codificacao\": \"15\"
-           }
-      ]",*/
-       try{
            $response = curl_exec($curl);
            $err = curl_error($curl);
 
            curl_close($curl);
            $res = json_decode($response, true);
-           \Log::info($res);
+           //\Log::info($res);
            if($res['status'] == 200){
                DisparoMensagem::where('id', $this->sms->id)->update([
                    'status' => 1
@@ -94,7 +85,8 @@ class ProcessSms implements ShouldQueue
            }
        }catch(\Exception $e){
            DisparoMensagem::where('id', $this->sms->id)->update([
-               'status' => 3
+               'status' => 3,
+               'log' => $e->getMessage()
            ]);
        }
     }

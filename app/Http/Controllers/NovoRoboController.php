@@ -705,7 +705,6 @@ class NovoRoboController extends Controller{
             $processo->idSubtipoAgenda = $input['filtroSubtipoProcesso'];
             $processo->data_id = 0;
             $processo->save();
-
             $sql = RoboExtracaoDetalhes::find($input['hidden_id']);
             $sql->is_enviado_agenda = 1;
             $sql->save();
