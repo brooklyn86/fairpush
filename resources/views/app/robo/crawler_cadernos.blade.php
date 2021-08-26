@@ -109,7 +109,28 @@
                                     }
                                 ?>
 								<div class="table-responsive">
+                                <form action="#" method="get">
+                                    <label for="de">
+                                        <select name="de" class="form-control">
+                                            <option value="">Sem Filtro</option>
+                                            <option value="1">R$ 1,00</option>
+                                            <option value="251000">R$ 250.000,00</option>
+                                            <option value="501000">R$ 500.000,00</option>
+                                            <option value="1001000">R$ 1.000.000,00</option>
+                                        </select>
+                                    </label>
                                     
+                                    <label for="ate">
+                                        <select name="ate" class="form-control">
+                                            <option value="">Sem Filtro</option>
+                                            <option value="250000">R$ 250.000,00</option>
+                                            <option value="500000">R$ 500.000,00</option>
+                                            <option value="1000000">R$ 1.000.000,00</option>
+                                            <option value="10000000">+ R$ 1.000.000,00</option>
+                                        </select>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                                </form>
 									<table class="table table-stripped mb-0">
 										<thead>
 											<tr>
@@ -141,6 +162,7 @@
                                                @else Não informado! </br>  @endif </td>
                                               <?php $total_condenacao =preg_split('/\s+/',$p->total_condenacao);?>
                                               @if(isset($total_condenacao[1]))
+                                        
                                               <td>R$ {{number_format($total_condenacao[1],2,',','.')}}</td>
                                               @else
                                               <td>R$ {{number_format($p->total_condenacao,2,',','.')}}</td>
@@ -165,7 +187,7 @@
                                             @endforeach
                                         </tbody>
                                     </table>
-                                            {{ $sql->links()}}
+                                            {{ $sql->appends(request()->query())->links()}}
                                     </div>
                                 </div>
 

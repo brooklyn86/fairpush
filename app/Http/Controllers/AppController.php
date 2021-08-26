@@ -573,20 +573,19 @@ class AppController extends Controller
                       $data_nascimento = $dt_nascimentoExplode[2].'-'.$dt_nascimentoExplode[1].'-'.$dt_nascimentoExplode[0];
                       $processo->data_nascimento = $data_nascimento;
                       $processo->save();
+
                       try{
                          DB::table('movimentacoes')->insert([
                            'idfuncionario' => Auth::user()->id,
                            'idtipo' => 4,
                            'created_at' => DB::raw('now()')
                          ]);
-                      }catch(\Exception $e){
-
+                        }catch (\Throwable $th) {
                       }
 
-              }
+                     }
 
           } catch (\Throwable $th) {
-              //throw $th;
           }
           try {
 
@@ -833,6 +832,106 @@ class AppController extends Controller
           return response()->json(['emails' => $emailSave, 'telefones' => $telefoneSave, 'data_nascimento' => $data_nascimento]);
         }
     }
+
+    public function postAtualizaScoreCPF(Request $request){
+        $input = $request->all();
+        $score = '';
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => "https://api.ph3a.com.br/DataBusca/api/Account/Login",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => "",
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => "POST",
+          CURLOPT_POSTFIELDS => "UserName=cf9bb0a5-fcc4-1755-3645-8ef7b29d7721",
+        ));
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+          echo "cURL Error #:" . $err;
+        } else {
+          $emailSave = [];
+          $telefoneSave = [];
+          $response = json_decode($response);
+          if(isset($response->data->Token)){
+              $token = $response->data->Token;
+
+              $response = Curl::to('https://api.ph3a.com.br/DataBusca/data')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Token: '.$token)
+                            ->withData([
+                                 'Document' =>$input['cpf']
+                             ])->asJson()->post();
+
+                             if(isset($response->Data->CreditScore->D00)){
+                                $score = $response->Data->CreditScore->D00;
+                                $processo = Processos::find( $input['idProcesso']);
+
+                                $processo->score = $response->Data->CreditScore->D00;
+                                $processo->save();
+                             }
+          }
+
+        try{
+            foreach($response->Data->Phones as $telefone){
+
+
+                $hasTelefone = Telefones::where('telefone', $telefone->FormattedNumber)->where('order_id', $input['idProcesso'])->first();
+                if(is_null($hasTelefone) || empty($hasTelefone) || !$hasTelefone){
+
+                    $newtelefone = new Telefones;
+                    $newtelefone->telefone =$telefone->FormattedNumber;
+                    $newtelefone->order_id = $input['idProcesso'];
+                    $newtelefone->numeroFormatado =$telefone->AreaCode.$telefone->Number;
+                    $newtelefone->save();
+                    array_push($telefoneSave,$newtelefone->toArray());
+
+                    try{
+                        $response = Curl::to('https://api.totalvoice.com.br/valida_numero')
+                            //->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withHeader('Access-Token: cf00d760354dfe4b8eab638ba810f667')
+                            ->withData([
+                                 'numero_destino' => $telefone->AreaCode.$telefone->Number
+                             ])->asJson()->post();
+
+                             if(isset($response->dados->id)){
+                                 Telefones::where('id', $newtelefone->id)->update([
+                                     'callId' => $response->dados->id,
+                                     'isConsultado' => '0',
+                                     'returnStatus' => 'em consulta'
+                                 ]);
+                             }
+                    }catch(\Exception $e){
+                        DB::table('teste')->insert([
+                            'campo1' => $e->getMessage()
+                        ]);
+                    }
+
+                    try{
+                       DB::table('movimentacoes')->insert([
+                         'idfuncionario' => Auth::user()->id,
+                         'idtipo' => 3,
+                         'created_at' => DB::raw('now()')
+                       ]);
+                    }catch(\Exception $e){
+
+                    }
+                }
+            }
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+          return response()->json(['telefones' => $telefoneSave, 'score' =>$score]);
+        }
+    }
     public function filterTelefone(Request $request){
         $telefone = $request->all();
         $processos = Processos::join('telefones', 'telefones.order_id','=','processos.id')
@@ -863,6 +962,17 @@ class AppController extends Controller
         $response = [];
         foreach($processos as $processo){
             array_push($response, ['value' => $processo->cpf.' - '.$processo->processo_de_origem , 'data' => strval($processo->id)]);
+        }
+        return json_encode(['suggestions' => $response]);
+
+    }
+
+    public function filterID(Request $request){
+        $id = $request->all();
+        $processos = Processos::join('agenda', 'agenda.processo_id','=','processos.id')->where('processos.id','like', '%'.$id['query'].'%')->limit(5)->get();
+        $response = [];
+        foreach($processos as $processo){
+            array_push($response, ['value' => $processo->id.' - '.$processo->processo_de_origem , 'data' => strval($processo->id)]);
         }
         return json_encode(['suggestions' => $response]);
 
@@ -960,7 +1070,8 @@ class AppController extends Controller
     }
 
 
-    $validador = RoboExtracaoDetalhes::join('agenda', 'robo_extracao_detalhes.id', '=', 'agenda.processo_id')->where('robo_extracao_detalhes.cpf', $sql->cpf)->first();
+    $validador = DB::table('agenda')->leftjoin('processos', 'processos.id', '=', 'agenda.processo_id')->where('processos.cpf','=', $sql->cpf)->exists();
+
     if($validador){
         return Response()->json(['error' => true, 'message' => 'Existe um processo com o mesmo CPF na agenda']);
 
@@ -1048,7 +1159,7 @@ class AppController extends Controller
     }
 
 
-    $validador = Processos::join('agenda', 'processos.id', '=', 'agenda.processo_id')->where('processos.cpf', $sql->cpf)->first();
+    $validador = Processos::join('agenda', 'processos.id', '=', 'agenda.processo_id')->where('processos.cpf', $sql->cpf)->exists();
     if($validador){
         return Response()->json(['error' => true, 'message' => 'Existe um processo com o mesmo CPF na agenda']);
 
@@ -1102,7 +1213,6 @@ class AppController extends Controller
         $arraySubTiposAgenda = [];
 
         if(count($tiposAgenda) > 0){ foreach($tiposAgenda as $dados){ $arrayTiposAgenda[$dados->id] = $dados->tipoAgenda; } }
-
         $filtroTipoProcesso = '';
         $filtroSubtipoProcesso = '';
 
@@ -1441,7 +1551,7 @@ class AppController extends Controller
             return $data;
     }
     public function generateExcelAgenda(){
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setCellValue('A1', 'Processo');
         $sheet->setCellValue('A2', 'Ordem Cronológica');
@@ -1475,9 +1585,91 @@ class AppController extends Controller
                 $i++;
             }
 
-        $writer = new Xlsx($spreadsheet);
+        $writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('agenda.xlsx');
     }
+
+    public function generateAgenda2(){
+        
+        $spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Processo');
+        $sheet->setCellValue('A2', 'Ordem Cronológica');
+        $sheet->setCellValue('A3', 'Situação');
+        $sheet->setCellValue('A4', 'Responsavel');
+        $sheet->setCellValue('A5', 'Valor');
+        $sheet->setCellValue('A6', 'Cendente');
+        $sheet->setCellValue('A7', 'Advogado');
+        $sheet->setCellValue('A8', 'Ent. Devedora');
+        $sheet->setCellValue('A9', 'CPF');
+
+        $sql = Processos::leftJoin('agenda', 'agenda.processo_id','=','processos.id')
+        ->leftJoin('cedentes', 'cedentes.idprocesso','=','processos.id')
+        ->leftJoin('agenda_status_processo as status', 'status.id','=','agenda.status_id')
+            ->select('processos.*', 'agenda.processo_id', 'processos.id as process_id', 'users.name', 'cedentes.nome', 'status.titulo')
+            // ->leftJoin('dates', 'dates.id','=','processos.data_id')
+            ->leftJoin('users', 'users.id','=','processos.user_id')
+            ->whereNotNull('agenda.processo_id')->get();
+            $i = 0;
+            for( $row = 2; $row <=$sql->count(); ++$row){
+                $sheet->getCellByColumnAndRow(1, $row)->setValue($sql[$i]['processo_de_origem']);
+                $sheet->getCellByColumnAndRow(2, $row)->setValue($sql[$i]['ordem_cronologica']);
+                $sheet->getCellByColumnAndRow(3, $row)->setValue($sql[$i]['titulo']);
+                $sheet->getCellByColumnAndRow(4, $row)->setValue($sql[$i]['name']);
+                $sheet->getCellByColumnAndRow(5, $row)->setValue(number_format($sql[$i]['principal_bruto'],2,',','.'));
+                $sheet->getCellByColumnAndRow(6, $row)->setValue(number_format($sql[$i]['juros_moratorio'],2,',','.'));
+                $sheet->getCellByColumnAndRow(7, $row)->setValue($sql[$i]['advogado']);
+                $sheet->getCellByColumnAndRow(8, $row)->setValue($sql[$i]['advogado']);
+                $sheet->getCellByColumnAndRow(9, $row)->setValue($sql[$i]['entidade_devedora']);
+                $sheet->getCellByColumnAndRow(9, $row)->setValue($sql[$i]['cpf']);
+                $i++;
+            }
+
+        $writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=my_excel_filename.xls");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        $writer->save('php://output');
+        // $writer->save('agenda.xlsx');
+    }
+    public function generateAgenda(Request $request){
+
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '-1');
+        $sql = Processos::join('agenda', 'agenda.processo_id','=','processos.id')
+        ->leftJoin('telefones', 'telefones.order_id','=','processos.id')
+        ->select('processos.*', 'agenda.processo_id', 'processos.id as process_id', 'telefones.telefone')
+        ->where('telefones.telefone','!=', null)
+        ->where('agenda.status_id','=',2)
+        ->where('telefones.telefone','!=', '')
+        ->whereNotNull('agenda.processo_id')->paginate(1000);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Processo');
+        $sheet->setCellValue('B1', 'Requerente');
+        $sheet->setCellValue('C1', 'Ent. Devedora');
+        $sheet->setCellValue('D1', 'Telefone');
+        $row = 2;
+        foreach($sql as  $dados) {
+            $sheet->getCellByColumnAndRow(1, $row)->setValue($dados['processo_de_origem']);
+            $sheet->getCellByColumnAndRow(2, $row)->setValue($dados['reqte']);
+            $sheet->getCellByColumnAndRow(3, $row)->setValue($dados['entidade_devedora']);
+            $sheet->getCellByColumnAndRow(4, $row)->setValue($dados['telefone']);
+            $row++;
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=Lista de Contatos.xls");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        $writer->save('php://output');
+       
+    }
+
 
     public function alterarAgenda(Request $request){
         $input = $request->all();
@@ -1590,7 +1782,7 @@ class AppController extends Controller
         }
         DB::table('log')->insert([
             'id_funcionario' => auth()->user()->id,
-            'id_processo' => $input['idprocesso'],
+            'id_processo' => $processos->idprocesso,
             'anotacao' => 'O Funcionário cadastrou um novo Processo na plataforma' ,
             'created_at' => DB::raw('now()')
          ]);
@@ -1697,7 +1889,7 @@ class AppController extends Controller
                     ->leftJoin('users','users.id','=','processos.user_id')
                     // ->leftJoin('subtipo_agenda', 'subtipo_agenda.id','=','processos.idSubtipoAgenda')
                     ->leftJoin('tipo_agenda', 'tipo_agenda.id','=','processos.idSubtipoAgenda')
-                    ->select('processos.*', 'users.backgroundColor', 'users.textColor', 'users.id as userid', 'tipo_agenda.tipoAgenda as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
+                    ->select('processos.*','processos.id as processoID', 'users.backgroundColor', 'users.textColor', 'users.id as userid', 'tipo_agenda.tipoAgenda as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
                     ->where(function($query) use ($input) {
                         if(auth()->user()->role_id != User::ADMIN){
                             $query->where('processos.user_id',auth()->user()->id);
@@ -1711,6 +1903,8 @@ class AppController extends Controller
 
                 if(count($sql) > 0){
                    foreach($sql as $dados){
+                      $ultimaAbertura = \Carbon\Carbon::createFromDate($dados->dataUltimaAbertura);
+                      $now = \Carbon\Carbon::now();
                       $pb = number_format($dados->principal_bruto,2,'.','');
                       $ju = number_format($dados->juros_moratorio,2,'.','');
                       $dados->valorPrecatorioTotal = ($pb + $ju);
@@ -1721,6 +1915,7 @@ class AppController extends Controller
                         }
                       $arrayResponse[] = [
                          'id' => $dados->id,
+                         'processoID' => $dados->processoID,
                          'nome' => ucwords(strtolower($dados->reqte)),
                          'iduser' => $dados->userid,
                          'userid' => $dados->userid,
@@ -1733,7 +1928,9 @@ class AppController extends Controller
                          'ordem_cronologica' => $dados->ordem_cronologica,
                          'data_nascimento' => $dados->data_nascimento,
                          'backgroundColor' => $dados->backgroundColor,
-                         'textColor' => $dados->textColor
+                         'textColor' => $dados->textColor,
+                         'abandono' => $ultimaAbertura->diffInDays($now)
+                         //  'abandono' =>  $datework->diffInDays($now)
                       ];
                    }
                 }
@@ -1757,7 +1954,7 @@ class AppController extends Controller
                     ->leftJoin('subtipo_agenda', 'subtipo_agenda.id','=','processos.idSubtipoAgenda')
 
                     ->leftJoin('tipo_agenda', 'tipo_agenda.id','=','subtipo_agenda.idTipoAgenda')
-                    ->select('processos.*', 'users.backgroundColor', 'users.textColor', 'users.id as userid', 'subtipo_agenda.titulo as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
+                    ->select('processos.*','processos.id as processoID','users.backgroundColor', 'users.textColor', 'users.id as userid', 'subtipo_agenda.titulo as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
                     ->where(function($query) use ($input) {
                         if(auth()->user()->role_id != User::ADMIN){
                             $query->where('processos.user_id',auth()->user()->id);
@@ -1770,10 +1967,13 @@ class AppController extends Controller
                         }
                     })
                     ->where('agenda.status_id', $status_id)->get();
+                // dd($sql);
                 $arrayResponse = [];
 
                 if(count($sql) > 0){
                    foreach($sql as $dados){
+                      $ultimaAbertura = \Carbon\Carbon::createFromDate($dados->dataUltimaAbertura);
+                      $now = \Carbon\Carbon::now();
                       $pb = number_format($dados->principal_bruto,2,'.','');
                       $ju = number_format($dados->juros_moratorio,2,'.','');
                       $dados->valorPrecatorioTotal = ($pb + $ju);
@@ -1784,6 +1984,7 @@ class AppController extends Controller
                       }
                       $arrayResponse[] = [
                          'id' => $dados->id,
+                         'processoID' => $dados->processoID,
                          'nome' => ucwords(strtolower($dados->reqte)),
                          'iduser' => $dados->userid,
                          'userid' => $dados->userid,
@@ -1796,7 +1997,8 @@ class AppController extends Controller
                          'ordem_cronologica' => $dados->ordem_cronologica,
                          'data_nascimento' => $dados->data_nascimento,
                          'backgroundColor' => $dados->backgroundColor,
-                         'textColor' => $dados->textColor
+                         'textColor' => $dados->textColor,
+                         'abandono' => $ultimaAbertura->diffInDays($now)
                       ];
                    }
                 }
@@ -1815,15 +2017,7 @@ class AppController extends Controller
 
 
     }
-    public function agendaAtualizarStatus(Request $request){
 
-        $agendas = Agenda::where('status_id', 5)->get();
-        foreach($agendas as $agenda){
-            $agenda->status_id = $agenda->status_id + 1;
-            $agenda->save();
-        }
-
-    }
     public function recuperaDadoseComentariosByProcessoId($idprocesso){
 
 
@@ -1837,10 +2031,14 @@ class AppController extends Controller
                  'status' => 'erro'
              ]);
          }
+
          $cendente = DB::table('cedentes')->where('idprocesso',$sql[0]->id)->get();
-         DB::table('processos')->where('id', $idprocesso)->update([
-             'dataUltimaAbertura' => DB::raw('now()')
-         ]);
+         if(Auth::user()->role_id != 1){
+            DB::table('processos')->where('id', $idprocesso)->update([
+                'dataUltimaAbertura' => DB::raw('now()')
+            ]);
+         }
+
 
          $data_base = explode('-', $sql[0]->data_base);
          if(isset($data_base[0], $data_base[1], $data_base[2])){
@@ -2004,7 +2202,8 @@ class AppController extends Controller
              'diffDias' => $sql[0]->diffDias,
              'cedentes' => $cendente,
              'idTipo' => $sql[0]->idTipo,
-             'score' => $sql[0]->score
+             'idSubtipoAgenda' =>  $sql[0]->idSubtipoAgenda,
+             'score' => $sql[0]->score,
          ]);
     }
 
@@ -2146,7 +2345,7 @@ class AppController extends Controller
              ]);
          }
 
-         $diffDias = '540';
+         $diffDias = '800';
         //  try{
         //      $mcDataEmissaoPrecatorio = explode('/', $input['mcDataEmissaoPrecatorio']);
         //      $mcDataVencimento = explode('/', $input['mcDataVencimento']);
@@ -2299,13 +2498,14 @@ class AppController extends Controller
 
          if($input['desconto17'] == 1){
              //$diferencaDias = 1;
-             $diferencaDias = $diferencaDias - 540;
+             $diferencaDias = $diferencaDias - 800;
          }
 
          if($diferencaDias < 1){
              $diferencaDias = 1;
          }
 
+         $diferencaDias = 800;
 
 
          if($diffDias < 0){
@@ -2319,8 +2519,8 @@ class AppController extends Controller
          }
 
          /* ALTERACAO RECENTE -> Forcando a diferenca de dias, para ficar sempre em 800 */
-         $diffDias = 800;
-         $diferencaDias = 800;
+         /*$diffDias = 800;
+         $diferencaDias = 800;*/
 
 
          $mcValorPrincipal = $input['mcValorPrincipal'];
@@ -2383,7 +2583,7 @@ class AppController extends Controller
 
          //$saldoAtualizado = ( $soma1 / ($subsomaPercentualAm/100) - $mcPagamentosParciais ) + $a;
 
-         $saldoAtualizado = (($result1 + $result2 + $jurosSobrePrincipal) - $mcPagamentosParciais ) + $a;
+         $saldoAtualizado = (($result1 + $result2 + $jurosSobrePrincipal) + $mcPagamentosParciais ) + $a;
          $valorCessaoSemHonorarios = round($saldoAtualizado,2) * (round($mcCessaoSemHonorarios)/100);
          $valorPagamentoCesso = round($valorCessaoSemHonorarios - ($valorCessaoSemHonorarios * 0.09)) * (round($mcPagamentoCessao)/100);
          $totalBruto = $soma1;
@@ -3147,7 +3347,7 @@ class AppController extends Controller
     }
 
     public function recuperaSubTipoAjax($id){
-        $sql = SubtipoAgenda::where('idTipoAgenda', $id)->get();
+        $sql = subtipoagenda::where('idTipoAgenda', $id)->get();
 
         return response()->json([
             'status' => 'ok',

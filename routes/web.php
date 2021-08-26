@@ -61,6 +61,7 @@ Route::middleware('auth')->prefix('app')->group(function(){
 
     Route::post('agenda/enviar-chat', 'AppController@postEnviarChat');
     Route::get('agenda/capturaCpf/contatos', 'AppController@postAtualizaCPF');
+    Route::get('agenda/atualizaScore', 'AppController@postAtualizaScoreCPF');
     Route::post('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
     Route::get('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
     Route::post('agenda/salvar-email', 'AppController@postSalvarEmail');
@@ -99,6 +100,7 @@ Route::middleware('auth')->prefix('app')->group(function(){
     Route::get('/autocomplete/filterFuncionario', 'AppController@filterFuncionario')->name('app.sms.getsms');
     Route::get('/autocomplete/filterReqte', 'AppController@filterReqte')->name('app.sms.getsms');
     Route::get('/autocomplete/filterCPF', 'AppController@filterCPF')->name('app.cpf.getcpf');
+    Route::get('/autocomplete/filterID', 'AppController@filterID')->name('app.id.getid');
 
     Route::get('sms/recupera-telefones-agenda/{idprocesso}', 'AppController@recuperaTelefonesAgenda');
     Route::post('sms/dispara-sms', 'AppController@disparaSms');
@@ -111,6 +113,9 @@ Route::middleware('auth')->prefix('app')->group(function(){
 Route::middleware(['checkAdmin','auth'])->prefix('app')->group(function(){
     Route::get('seleciona-tipo-agenda', 'AppController@selecionaTipoAgenda');
     Route::get('processos-avulso', 'NovoRoboController@viewCadernoProcessoAvulso');
+    Route::get('certificacao', 'NovoRoboController@viewEnvioCertificacao');
+    Route::get('getcertificacao', 'NovoRoboController@getCertificados');
+    Route::post('certificacao', 'NovoRoboController@postEnvioCertificacao');
 
     //Setores
     Route::get('setores/index', 'AppController@viewSetoresIndex')->name('app.setores.index');

@@ -105,7 +105,7 @@
         <script src="/assets/js/bootstrap.min.js"></script>
 		<script src="/assets/js/app.js"></script>
 
-        <script src="https://sistemaacesso.tk:3000/socket.io/socket.io.js"></script>
+        <script src="https://www.ativosalternativos.com.br:3000/socket.io/socket.io.js"></script>
     </body>
 
 <script type="text/javascript">
@@ -116,7 +116,7 @@
             }
         });
 
-        var socket = io.connect("https://sistemaacesso.tk:3000", {transports: ['websocket', 'polling', 'flashsocket']});
+        var socket = io.connect("https://www.ativosalternativos.com.br:3000", {transports: ['websocket', 'polling', 'flashsocket']});
 
         $('#mensagemAguardando').hide();
 

@@ -56,7 +56,6 @@
 					</div>
 				</div>
 
-
                 <div class="row">
 					<div class="col-sm-12">
 						<div class="card mb-0">
@@ -75,7 +74,30 @@
                                         echo '<div class="alert alert-danger">'.Session::get('erro').'</div>';
                                     }
                                 ?>
-								<div class="table-responsive">
+                                <div class="table-responsive">
+                                <form action="#" method="get">
+                                    <label for="de">
+                                        <select name="de" class="form-control">
+                                            <option value="">Sem Filtro</option>
+                                            <option value="1">R$ 1,00</option>
+                                            <option value="251000">R$ 250.000,00</option>
+                                            <option value="501000">R$ 500.000,00</option>
+                                            <option value="1001000">R$ 1.000.000,00</option>
+                                        </select>
+                                    </label>
+                                    
+                                    <label for="ate">
+                                        <select name="ate" class="form-control">
+                                            <option value="">Sem Filtro</option>
+                                            <option value="250000">R$ 250.000,00</option>
+                                            <option value="500000">R$ 500.000,00</option>
+                                            <option value="1000000">R$ 1.000.000,00</option>
+                                            <option value="10000000">+ R$ 1.000.000,00</option>
+                                        </select>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                                </form>
+								
 									<table class="table table-stripped mb-0">
 										<thead>
 											<tr>

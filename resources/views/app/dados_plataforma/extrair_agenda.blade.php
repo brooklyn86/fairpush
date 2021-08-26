@@ -94,6 +94,7 @@
 									<table class="table table-stripped mb-0" id="getAgenda">
 										<thead>
 											<tr>
+                                            <th>ID</th>
                                             <th>Processo</th>
                                             <th>Ordem Cronológica</th>
                                             <th>Situação</th>
@@ -370,6 +371,7 @@
                         "url":  '{{ route("get.agenda.processos") }}'
                     },
                     "columns": [
+                        { "data": "id" },
                         { "data": "processo_de_origem" },
                         { "data": "ordem_cronologica" },
                         { "data": "status" },

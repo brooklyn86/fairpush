@@ -106,6 +106,7 @@
                                         echo '<div class="alert alert-danger">'.Session::get('erro').'</div>';
                                     }
                                 ?>
+
 								<div class="table-responsive">
 									<table class="table table-stripped mb-0">
 										<thead>
@@ -195,7 +196,7 @@
                                             ?>
                                         </tbody>
                                     </table>
-                                    {{$sql->links()}}
+                                    {{$sql->appends(request()->query())->links()}}
                                 </div>
 
                             </div>

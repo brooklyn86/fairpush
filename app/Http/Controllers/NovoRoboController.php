@@ -86,6 +86,84 @@ class NovoRoboController extends Controller{
         return Response()->json($hasDate);
 
     }
+    
+    public function viewEnvioCertificacao(Request $request){
+        
+        return view('app.robo.certificacao');
+
+    }
+    public function postEnvioCertificacao(Request $request){
+        
+        try {
+            // Define o valor default para a variável que contém o nome da imagem 
+         $nameFile = null;
+
+         // Verifica se informou o arquivo e se é válido
+         if ($request->hasFile('file') && $request->file('file')->isValid()) {
+             
+             // Define um aleatório para o arquivo baseado no timestamps atual
+             $name = uniqid(date('HisYmd'));
+     
+             // Recupera a extensão do arquivo
+             $extension = $request->file->extension();
+     
+             // Define finalmente o nome
+             $nameFile = "{$name}.{$extension}";
+     
+             // Faz o upload:
+             $upload = $request->file->storeAs('xls', $nameFile);
+             // Se tiver funcionado o arquivo foi armazenado em storage/app/public/categories/nomedinamicoarquivo.extensao
+             // Verifica se NÃO deu certo o upload (Redireciona de volta)
+             if ( !$upload )
+                 return redirect()
+                             ->back()
+                             ->with('error', 'Falha ao fazer upload')
+                             ->withInput();
+             
+             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+             $reader->setLoadAllSheets();
+ 
+             $spreadsheet = $reader->load('/home/fairconsultoria/public_html/novoapp/storage/app/xls/'.$nameFile);
+             $nome = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 23)->getValue();
+             $nascimento = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 24)->getValue();
+             $nome_mae = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 25)->getValue();
+             $cpf = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 28)->getValue();
+             $explodeNome = explode(':', $nome);
+             $explodeNascimento = explode(':', $nascimento);
+             $explodeNomeMae = explode(':', $nome_mae);
+             $explodeCpf = explode(':', $cpf);
+ 
+             $nomeFormatado =  trim($explodeNome[1]);
+             $nascimentoFormatado = trim($explodeNascimento[1]);
+             $nomeMaeFormatado = trim($explodeNomeMae[1]);
+             $cpfFormatado = trim($explodeCpf[1]);
+
+             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
+             dd('python /home/fairconsultoria/public_html/novoapp/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
+             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
+             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
+             dd('pause');
+             
+         }
+         } catch (\Throwable $th) {
+            dd($th);
+         }
+    }
+
+    public function getCertificados(Request $request){
+        $path = "/home/fairconsultoria/public_html/novoapp/public/storage/certidao/".$request->cpf;
+        $diretorio = dir($path);
+
+        $arquivos = [];
+        while($arquivo = $diretorio->read()){
+            if($arquivo != '.' && $arquivo != '' &&  $arquivo != '..'){
+                array_push($arquivos, ['url'=> url('/storage/pdfs/'.$arquivo), 'name' => $arquivo]);
+            }
+        }
+        $diretorio->close();
+
+        return Response()->json($arquivos);
+    }
 
     public function isError(Request $request){
         $hasProcesso = RoboExtracaoDetalhes::where('processo_de_origem',$request->processo)->first();
@@ -181,7 +259,7 @@ class NovoRoboController extends Controller{
             'secret_key_687193f005eee3ed1d6dc10e12161bc8_6sShF31fac5ce7b495ffd2ad86b0c08437b2e');
 
         $file = $myTask->addFile('/home/fairconsultoria/public_html/novoapp/public/temppdf/'.$data_sembarra.'.pdf');
-        $myTask->setRanges("1-670");
+        $myTask->setRanges("1-875");
         $myTask->setPackagedFilename('split_documents');
         $myTask->setOutputFilename('split_'.$data_sembarra.'');
         $myTask->execute();
@@ -220,10 +298,27 @@ class NovoRoboController extends Controller{
 
         return view('app.robo.federais',compact('sql'),$data);
     }
-    public function viewCrawlerCaderno($id){
-        $sql = RoboExtracaoDetalhes::where('campo2', $id);
-        $total = $sql->count();
+    public function viewCrawlerCaderno(Request $request){
+
+
+        if(isset($request->de) || isset($request->ate)){
+
+            $sql = RoboExtracaoDetalhes::where('campo2', $request->id);
+            if($request->de != '' && $request->de != 0 &&  $request->de != null){
+                $sql->where('total_condenacao','>=',intval($request->de));
+            }
+            if($request->ate != '' && $request->ate != 0 &&  $request->ate != null){
+                $sql->where('total_condenacao','<=',intval($request->ate));
+            }
+            
+        }else{
+            $sql = RoboExtracaoDetalhes::where('campo2', $request->id);
+        }
+        
+        $total = $sql->count(); 
         $sql = $sql->paginate(10);
+
+        $sql->appends(request()->query());
         $tiposAgenda = TipoAgenda::all();
         $arrayTiposAgenda = [];
 
@@ -430,7 +525,10 @@ public function store(Request $request)
             if($valor_principal < 2){
                 if($explode[0] == "Valor Principal"){
                     if($valor_principal == 1){
-                        $processo->	principal_bruto = (isset($explode[1]) ? trim($explode[1])  : "");
+                        $p = str_replace("R$ ", "", $explode[1]);
+                        $p = str_replace(".", "", $p);
+                        $p = str_replace(",", ".", $p);
+                        $processo->	principal_bruto = (isset($explode[1]) ? trim($p)  : "");
                         $processo->save();
                     }
                     $valor_principal++;                    
@@ -440,9 +538,10 @@ public function store(Request $request)
             if($valor_juro < 2){
                 if($explode[0] == "Valor Juros"){
                     if($valor_juro == 1){
-                        $processo->juros_moratorio = (isset($explode[1]) ? trim($explode[1])  : "");
-                        $processo->order = 6;
-
+                        $p = str_replace("R$ ", "", $explode[1]);
+                        $p = str_replace(".", "", $p);
+                        $p = str_replace(",", ".", $p);
+                        $processo->juros_moratorio = (isset($explode[1]) ? trim($p)  : "");
                         $processo->save();
                         
                     }
@@ -452,7 +551,10 @@ public function store(Request $request)
             }
             if($valor_req == 0){
                 if($explode[0] == "Valor Total do Requerente"){
-                    $processo->valor_reqte = (isset($explode[1]) ? trim($explode[1])  : "");
+                    $p = str_replace("R$ ", "", $explode[1]);
+                    $p = str_replace(".", "", $p);
+                    $p = str_replace(",", ".", $p);
+                    $processo->valor_reqte = (isset($explode[1]) ?  trim($p) : "");
                     $processo->save();
                     $valor_req = 1;
                 }
@@ -461,7 +563,6 @@ public function store(Request $request)
                 $valor_req = 1;
                 $meses = explode('D', $explode[1]);
                 $processo->numero_meses = (isset($meses[0]) ? trim($meses[0])  : "");
-
                 $processo->save();
                 
             }
@@ -474,7 +575,7 @@ public function store(Request $request)
                 }
             }
         }
-        dd($i);
+
         // $processo->processos_anteriores = json_encode($processoAnterior);
         $processo->nome_reu = $nome_reu;
         // $processo->segundo_cpf = $segundo_cpf;
@@ -515,7 +616,7 @@ public function store(Request $request)
         $result = $myTask->execute();
         $myTask->download('/home/fairconsultoria/public_html/novoapp/public/temppdf');*/
 
-        shell_exec('pdftotext -layout /home/fairconsultoria/public_html/novoapp/public/temppdf/'.$sql[0]->output_file_name.'-1-670.pdf /home/fairconsultoria/public_html/novoapp/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
+        shell_exec('pdftotext -layout /home/fairconsultoria/public_html/novoapp/public/temppdf/'.$sql[0]->output_file_name.'-1-875.pdf /home/fairconsultoria/public_html/novoapp/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
 
         $arquivo = file_get_contents('/home/fairconsultoria/public_html/novoapp/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
         $key = null; $time = null; $processos = null; $validador = false;$i = 0;
@@ -618,9 +719,9 @@ public function store(Request $request)
             'status' => 'ok'
         ], 200);*/
     }
-
+    /*  Mudar Lista  (AQUI) */
     public function getProcessosForPython(){
-        $processos = RoboExtracaoDetalhes::where('passou_robo', 0)->where('is_type', 0)->where('isError',0)->paginate(10000);
+        $processos = RoboExtracaoDetalhes::where('passou_robo', 0)->where('is_type', 0)->where('isError',1)->paginate(1000);
 
         return response()->json($processos);
     }
@@ -1036,8 +1137,24 @@ public function store(Request $request)
             'response' => $sql
         ]);
     }
-    public function postPreviaAgenda(Request $request){
+    public function viewPreviaAgenda($id){
+        $sql = RoboExtracaoDetalhes::find($id);
 
+        if($sql == null){
+            return response()->json([
+                'status' => 'erro'
+            ]);
+        }
+
+        $sql->requisitado = number_format($sql->requisitado,2,',','.');
+        $sql->principal_bruto = number_format($sql->principal_bruto,2,',','.');
+        $sql->total_condenacao = number_format($sql->total_condenacao,2,',','.');
+        $sql->juros_moratorio = number_format($sql->juros_moratorio,2,',','.');
+
+        return response()->json([
+            'status' => 'ok',
+            'response' => $sql
+        ]);
     }
     public function postEnviarAgendaAntes(Request $request){
         $input = $request->all();

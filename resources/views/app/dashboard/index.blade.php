@@ -199,7 +199,10 @@
                             <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="toggleEnvioLote">
                                 <i class="la la-filter"></i> Envio processos em lote
                             </a>
-
+                            <label for="filtroAbandono"  style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-light btn-sm text-white float-left ml-4" id="labelfiltroAbandono">
+                                <i class="la la-filter"> </i>Filtro de Abandono
+                                <input id="filtroAbandono" names="filtroAbandono" hidden type="checkbox" autocomplete="off"></input>
+                            </label>
                             <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="agendaAtual">
                                 <i class="la la-filter"> </i><span id="textoAgendaAtual">Todos</span>
                             </a>
@@ -300,6 +303,12 @@
                     <div class="form-group form-focus">
                         <input class="form-control floating" type="text" name="filtroDataBaseProcesso" id="filtroDataBaseProcesso">
                         <label class="focus-label">Data Base</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroIDProcesso" id="filtroIDProcesso">
+                        <label class="focus-label">ID</label>
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-3">
@@ -700,7 +709,7 @@
                         							<label>CPF</label>
                                                     <div class="input-group mb-3">
                                                         <input type="text" class="form-control" placeholder="CPF" aria-label="Username" aria-describedby="basic-addon1"  name="mepCpf" id="mepCpf">
-                                                        <div class="input-group-prepend">
+                                                        <div class="input-group-prepend" id="atualizaScore">
                                                             <span class="input-group-text" style="background:orange; color:white;" id="score">SC:</span>
                                                         </div>
                                                     </div>
@@ -1348,15 +1357,17 @@
                                 <form id="formAlterarAgenda" method="post" action="{{route('alterar.agenda')}}">
                                     <div class="row">
                                         <input type="hidden" name="mccidProcessoChangeAgenda" class="form-control form-control2" id="mccidProcessoChangeAgenda">
+                                        <input type="hidden"  id="mccidsubAgenda">
                                     </div>
                                     @csrf
                                     <div class="col-md-6 form-group">
                                         <label>Nova agenda</label>
+                                        
                                         {{ Form::select('tipoProcessoDisable',  array_merge([0 => 'Selecione um Tipo'], $arrayTiposAgenda), null, ['class' => 'custom-select type-change-agenda-disabled disable']) }}
                                     </div>
                                     <div class="form-group col-sm-12">
                                         <label>Sub-tipo da Agenda</label>
-                                        <select id="subTipoProcessoDisable" class="custom-select">
+                                        <select name="subTipoProcessoDisable" id="subTipoProcessoDisable" class="custom-select">
                                             <option value="">Selecione o Subtipo</option>
                                         </select>
                                         <div class="input-group-append">
@@ -1833,7 +1844,14 @@
                 <div class="row">
                     <div class="form-group col-sm-12">
                         <label>Tipo da Agenda</label>
-                        {{ Form::select('mnpTipoProcesso',  array_merge([0 => 'Selecione um Tipo'], $arrayTiposAgenda), null, ['class' => 'custom-select type-agenda']) }}
+                        <select name="mnpTipoProcesso" class="custom-select type-agenda tipo_agenda_select">
+                            <option value="">Selecione uma agenda</option>
+
+                            @foreach($arrayTiposAgenda as $key => $value )
+                                <option value="{{$key}}">{{$value}} </option>
+                            @endforeach 
+                        </select>
+
 
                     </div>
                 </div>
@@ -1853,6 +1871,7 @@
 
                     </div>
                 </div>
+
 					<div class="submit-section">
 					<button class="btn btn btn-dark submit-btn" type="button" id="mnpBtnSalvar">Salvar Processo</button>
 				</div>
@@ -2045,6 +2064,51 @@
                                 '</td>'+
                             '</tr>');
                         });
+                        $('#loadingCPF').attr('hidden',true);
+                        Swal.fire({
+                        icon: 'success',
+                        title: 'Atualizado',
+                        text: 'A lista de telefone e e-mail foi atualizada',
+                    });
+                    },error: function(){
+                        $('#loadingCPF').attr('hidden',true);
+                        Swal.fire({
+                        icon: 'error',
+                        title: 'Falha ao se comunicar com api!',
+                        text: 'Por favor tente novamente!',
+                    });
+                    },complete: function(){
+                        // element.removeAttr('disabled');
+                    }
+                });
+
+            });
+            $('#atualizaScore').click(function(e){
+                var cpf = $('#mepCpf').val();
+                var idProcesso = $('#mepIdProcesso').val();
+                $('#loadingCPF').removeAttr('hidden')
+                localStorage.setItem('validaNumero', moment().format());
+                $.ajax({
+                    url: 'agenda/atualizaScore?cpf='+cpf.replace(/[^\d]+/g,'')+'&idProcesso='+idProcesso,
+                    method: 'GET',
+                    success: function(res){
+                        $.each(res.telefones,function(index,val){
+                            $('#tbodyTelefones').append('<tr>'+
+                                '<td>'+val.telefone+'</td>'+
+                                '<td><span class="badge badge-primary">Em Consulta</span></td>'+
+                                '<td class="text-right">'+
+                                    '<div class="dropdown dropdown-action">'+
+                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
+                                            '<i class="material-icons">more_vert</i>'+
+                                        '</a>'+
+                                        '<div class="dropdown-menu dropdown-menu-right">'+
+                                            '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(res.telefone)+'" target="_blank" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</td>'+
+                            '</tr>');
+                        });
                         $('#score').html('SC: '+res.score);
                         $('#loadingCPF').attr('hidden',true);
                         Swal.fire({
@@ -2065,7 +2129,6 @@
                 });
 
             });
-
             $('body').on('click', '.mac_excluir_item', function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -2091,7 +2154,7 @@
             $('.type-agenda').change(function(e){
                 $('#mnpSubTipoProcesso').attr('disabled', 'disabled');
                 $('#mnpSubTipoProcessoLoad').removeAttr('hidden');
-                var typeAgenda = $('select[name=mnpTipoProcesso] option:selected').val();
+                var typeAgenda = $('.tipo_agenda_select').val();
                 console.log(typeAgenda)
                 $('.appnd').remove();
                 $.ajax({
@@ -2128,7 +2191,8 @@
                 $('#subTipoProcessoDisable').attr('disabled', 'disabled');
                 $('#subTipoProcessoLoadDisable').removeAttr('hidden');
                 var typeAgenda = $('select[name=tipoProcessoDisable] option:selected').val();
-
+                var subtipo = $('#mccidsubAgenda').val();
+                console.log(subtipo);
                 $('.appnd').remove();
                 $.ajax({
                     url: '/app/agendas/recuperar-subtipo-ajax/'+typeAgenda,
@@ -2139,6 +2203,8 @@
                                 $('#subTipoProcessoDisable').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
                                 $('#subTipoProcessoDisable').val(val.id);
                             });
+                            $('#subTipoProcessoDisable').val(subtipo);
+
                         }else{
                             Swal.fire({
                             icon: 'error',
@@ -2163,6 +2229,8 @@
                 $('#subTipoProcessoDisable').attr('disabled', 'disabled');
                 $('#subTipoProcessoLoadDisable').removeAttr('hidden');
                 var typeAgenda = $('select[name=tipoProcessoDisable] option:selected').val();
+                var subtipo = $('#mccidsubAgenda').val();
+                console.log(subtipo);
 
                 $('.appnd').remove();
                 $.ajax({
@@ -2174,6 +2242,8 @@
                                 $('#subTipoProcessoDisable').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
                                 $('#subTipoProcessoDisable').val(val.id);
                             });
+                            $('#subTipoProcessoDisable').val(subtipo);
+
                         }else{
                             Swal.fire({
                             icon: 'error',
@@ -2460,7 +2530,28 @@
                     })
                 }
             });
-
+            $('#filtroAbandono').change(function(e){
+                if($(this).is(':checked')){
+                    $('#labelfiltroAbandono').removeClass('btn btn-light');
+                    $('#labelfiltroAbandono').addClass('btn btn-success');
+                    $('.divProcesso').each(function(e){
+                        var abandono = $(this).attr('data-abandono');
+                        if( parseInt(abandono) <= 30 ){
+                            $(this).show();
+                        }else{
+                            $(this).hide();
+                        }
+                    })
+                }else{
+                    $('#labelfiltroAbandono').removeClass('btn btn-success');
+                    $('#labelfiltroAbandono').addClass('btn btn-light');
+                    $('.divProcesso').each(function(e){
+                        $(this).show();
+                    });
+                }
+               
+            });
+            
             $("#filtroDataProcesso").on("change paste keyup", function() {
                var texto = $(this).val();
                var texto = texto.toUpperCase();
@@ -2562,6 +2653,32 @@
                             $(this).show();
                             }else{
                             $(this).hide();
+                            }
+                        })
+                    }
+                }
+            });
+
+            $('#filtroIDProcesso').autocomplete({
+                serviceUrl: '/app/autocomplete/filterID',
+                minChars:1,
+                showNoSuggestionNotice:true,
+                noSuggestionNotice: 'ID não encontrado!',
+                onSelect: function (suggestion) {
+                    console.log(suggestion);
+                    if( $('#filtroIDProcesso').val() == '' ){
+                        $('.divProcesso').each(function(e){
+                            $(this).show();
+                        });
+                    }else{
+                        $('.divProcesso').each(function(e){
+                            var datauserid = $(this).attr('data-id');
+                            console.log(datauserid )
+                            console.log(suggestion.data )
+                            if( datauserid == suggestion.data ){
+                                $(this).show();
+                            }else{
+                                $(this).hide();
                             }
                         })
                     }
@@ -3077,7 +3194,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3110,11 +3227,10 @@
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     })
                     .then(function (response) {
-                    console.log(response.data)
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3150,7 +3266,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3186,7 +3302,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3222,7 +3338,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3259,7 +3375,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3296,7 +3412,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3332,7 +3448,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3378,7 +3494,7 @@
 
                             $.map( res.response, function( val, i ) {
 
-                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3411,7 +3527,7 @@
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
 
-                                $('#box1').append('<div class="card panel  clickEditar divProcesso"  data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box1').append('<div class="card panel  clickEditar divProcesso"  data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;" >'+
@@ -3444,7 +3560,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3476,7 +3592,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3510,7 +3626,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3542,7 +3658,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3574,7 +3690,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3606,7 +3722,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3682,7 +3798,7 @@
                             $('input[name=mnpValorJuros]').val('');
                             $('#modalNovoProcesso').modal('hide');
 
-                            $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+res.response.valorBruto+'" data-id="'+res.response.id+'" data-nome="'+res.response.nome+'" data-np="'+res.response.numeroProcesso+'" data-userid="'+res.response.userid+'" data-valorprecatorio="'+res.response.valorPrecatorioTotal+'" data-ordem_cronologica="'+res.response.ordem_cronologica+'" style="background-color: #'+res.response.backgroundColor+'; color: #'+res.response.textColor+'">'+
+                            $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+res.response.valorBruto+'" data-id="'+res.response.id+'" data-nome="'+res.response.nome+'" data-np="'+res.response.numeroProcesso+'" data-userid="'+res.response.userid+'" data-valorprecatorio="'+res.response.valorPrecatorioTotal+'" data-ordem_cronologica="'+res.response.ordem_cronologica+'" data-abandono="'+res.response.abandono+'" style="background-color: #'+res.response.backgroundColor+'; color: #'+res.response.textColor+'">'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3800,7 +3916,7 @@
 
             //             $.map( res.response, function( val, i ) {
 
-            //                 $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3831,7 +3947,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box1').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box1').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3862,7 +3978,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3893,7 +4009,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3925,7 +4041,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3956,7 +4072,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3987,7 +4103,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -4018,7 +4134,7 @@
             //     success: function(res){
             //         if(res.status == 'ok'){
             //             $.map( res.response, function( val, i ) {
-            //                 $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                 $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
             //                     '<div class="kanban-box">'+
             //                         '<div class="task-board-header">'+
             //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -4151,13 +4267,17 @@
                     url: '/app/agenda/recupera-dados-e-comentarios/' + id,
                     method: 'GET',
                     success: function(result){
+                        console.log(result);
                         $('#mepDataUltimaAbertura').html( 'Ultima Abertura: ' + result.data_ultima_abertura );
                         $('#mepIdProcesso').val( result.id );
                         $('#mepIdProcesso2').val( result.id );
                         $('#mccidProcessoCarta').val( result.id );
                         $('#mccidProcessoChangeAgenda').val( result.id );
                         $('select[name=tipoProcessoDisable] option[value='+result.idTipo+']').attr('selected','selected');
+                        $('#mccidsubAgenda').val(result.idSubtipoAgenda);
+
                         getSubAgenda();
+                        
                         $('.type-change-agenda-disabled').attr('disabled', 'disabled' ),
                         $('#mepNumeroProcesso').html( result.processo_de_origem );
                         $('#mepCabecaAcao').val( result.cabeca_de_acao );
@@ -4456,11 +4576,13 @@
                         subTipoProcesso: $('#subTipoProcesso').val(),
                         mccidProcessoChangeAgenda: $('#mccidProcessoChangeAgenda').val()
                     },success: function(res){
-                            Swal.fire({
+                        refiltrar();
+                        Swal.fire({
                             icon: 'success',
                             title: 'Cadastrado com sucesso',
                             text: 'Agenda alterada com sucesso',
                         });
+                        
                     },error: function(err){
                         Swal.fire({
                             icon: 'error',

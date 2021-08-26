@@ -132,6 +132,7 @@
                         <li><a href="/app/setores/index">Setores</a></li>
                         <li><a href="/app/usuarios/index">Usuários</a></li>
                         <li><a href="/app/agendas/index">Tipos de Agenda</a></li>
+                        <li><a href="/app/certificacao">Certificações</a></li>
                         <li><a href="/app/sms/index">SMS</a></li>
                     </ul>
                 </li>
