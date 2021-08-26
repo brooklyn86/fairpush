@@ -104,7 +104,7 @@
 
                                     <div class="form-row">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary" id="btn1">Enviar</button>
+                                            <button type="button" class="btn btn-dark" id="btn1">Enviar</button>
                                         </div>
                                     </div>
                                 {{ Form::close() }}

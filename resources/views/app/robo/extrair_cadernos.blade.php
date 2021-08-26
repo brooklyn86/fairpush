@@ -107,7 +107,7 @@
                                     }
                                 ?>
 								<div class="table-responsive">
-									<table class="datatable table table-stripped mb-0">
+									<table class="table table-stripped mb-0">
 										<thead>
 											<tr>
 												<th>Data</th>
@@ -168,7 +168,7 @@
 
                                                                     if($dados->is_processos_lidos == 0 && $dados->is_lendo_processos == 0){
                                                                         echo '
-                                                                        <a class="dropdown-item click_processos_lido" data-id="'.$dados->id.'" href="#">Iniciar Leitura</a>
+                                                                        <a class="dropdown-item click_processos_lidos" data-id="'.$dados->id.'" href="#">Iniciar Leitura</a>
                                                                         ';
                                                                     }
 
@@ -183,7 +183,7 @@
                                                                         <a class="dropdown-item" data-id="'.$dados->id.'" href="/app/robo/visualizar-processos/'.$dados->id.'">Visualizar Atividade Crawler</a>
                                                                         ';
                                                                     }
-
+                                                
                                                                     echo '
                                                                     </div>
                                                                 </div>
@@ -195,6 +195,7 @@
                                             ?>
                                         </tbody>
                                     </table>
+                                    {{$sql->links()}}
                                 </div>
 
                             </div>
@@ -221,6 +222,23 @@
 
     <script type="text/javascript">
         $(document).ready(function(e){
+            $('.click_processos_lidos').click(function(e){
+                var id = $(this).attr('data-id');
+
+                Swal.fire({
+                    title: 'Iniciar a leitura de processos?',
+                    text: "Tem certeza que deseja iniciar a leitura dos processos?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sim!'
+                }).then((result) => {
+                    if (result.value) {
+                        window.location.href = '/app/robo/iniciar-leitura/' + id;
+                    }
+                });
+            });
             $('#btn1').click(function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -243,24 +261,6 @@
                 }).then((result) => {
                     if (result.value) {
                         window.location.href = '/app/robo/iniciar-crawler/' + id;
-                    }
-                });
-            });
-
-            $('.click_processos_lido').click(function(e){
-                var id = $(this).attr('data-id');
-
-                Swal.fire({
-                    title: 'Iniciar a leitura de processos?',
-                    text: "Tem certeza que deseja iniciar a leitura dos processos?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sim!'
-                }).then((result) => {
-                    if (result.value) {
-                        window.location.href = '/app/robo/iniciar-leitura/' + id;
                     }
                 });
             });

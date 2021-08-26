@@ -51,7 +51,7 @@ def index():
         print('Erro: => Error de Conexão')
         driver.quit()
         index()
-    getProcessos = requests.get('https://www.fairconsultoria.com.br/v1/process')
+    getProcessos = requests.get('https://novoapp.fairconsultoria.com.br/app/robo/get-processos')
     if(getProcessos.status_code == 200):
         print("Capturados!")
         processosCapturados = getProcessos.json()
@@ -95,7 +95,7 @@ def index():
                         codUrl = base64.b64encode(novoUrlPdf[1].encode('utf-8'))
                         print("Pdf encontrado e capturado!")
                         print("Atualizando Processo no Servidor!")
-                        driver.get('https://fairconsultoria.com.br/v1/process/update/%i/%s/%s' % (
+                        driver.get('https://novoapp.fairconsultoria.com.br/app/robo/processo/update/%i/%s/%s' % (
                         processos["id"],cdProcessoPasta[0], codUrl.decode('utf-8')))
                         time.sleep(5)
                         print("Processo Atualizado")

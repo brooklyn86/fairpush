@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/assets/css/select2.min.css">
 	<link rel="stylesheet" href="/assets/css/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" href="/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.css">
+
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700&display=swap" rel="stylesheet">
@@ -134,7 +135,23 @@
             background-color: #ededed;
             border-right: 1px solid #2e2e2e;
         }
-    </style>
+        a {
+            color: #343a40;
+        }
+        .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; position:fixed !important; z-index: 100000 !important;}
+        .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
+        .autocomplete-selected { background: #F0F0F0; }
+        .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+        .autocomplete-group { padding: 2px 5px; }
+        .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
+        .ui-autocomplete{
+            z-index: -1 !important;
+            position:absolute;
+        }
+        .swal2-container{
+            z-index: 9999999999 !important;
+        }
+            </style>
 </head>
 <body>
     @include('app.include')
@@ -145,7 +162,7 @@
 
 		<!-- Page Wrapper -->
         <div class="page-wrapper">
-            <div class="content container-fluid">
+            <div class="content container-fluid" id="containerBody" hidden>
 
 				<!-- Page Header -->
 				<!-- <div class="page-header">
@@ -162,103 +179,141 @@
 				<!-- /Page Header -->
 
 				<!-- Content Starts -->
-                <div class="row board-view-header" style="margin-bottom: 10px !important;">
+                <div class="row board-view-header" style="margin-bottom: 10px !important; position:fixed !important; top:60px; z-index: 10;  background:#fff !important; width:100%; padding:10px">
+                <!-- <div class="row board-view-header" style="margin-bottom: 10px !important;!important; top:60px; z-index: 10;  background:#fff !important; width:100%; padding:10px"> -->
 
-					<div class="col-12 text-left">
+					<div class="col-12 text-left" style=" position:relative !important;">
                         <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                            <a href="#" style="cursor:'point';background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" class="btn btn-warning text-white float-left" data-toggle="modal" data-target="#modalNovoProcesso">
+                            <a href="#" style="cursor:'point';background-color: #FFFFFF; border: 1px solid #000; color: #000 !important " class="btn btn-warning btn-sm text-white float-left" data-toggle="modal" data-target="#modalNovoProcesso">
                                 <i class="fa fa-plus"></i> Criar novo processo
                             </a>
 
-                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="abre_filtros_agenda" data-toggle="modal" data-target="#modalFiltroTipoAgenda">
+                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="abre_filtros_agenda" data-toggle="modal" data-target="#modalFiltroTipoAgenda">
                                 <i class="la la-filter"></i> Alterar tipo de agenda
                             </a>
 
-                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="toggleFiltrosTexto">
+                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="toggleFiltrosTexto">
                                 <i class="la la-filter"></i> Filtrar por dados do processo
                             </a>
 
-                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-info text-white float-left ml-4" id="agendaAtual">
-                                Agenda Atual: <span id="textoAgendaAtual">Todos</span>
+                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="toggleEnvioLote">
+                                <i class="la la-filter"></i> Envio processos em lote
+                            </a>
+
+                            <a style="background-color: #FFFFFF; border: 1px solid #000; color: #000 !important" href="#" class="btn btn-dark btn-sm text-white float-left ml-4" id="agendaAtual">
+                                <i class="la la-filter"> </i><span id="textoAgendaAtual">Todos</span>
                             </a>
                         </div>
 
 
                     </div>
                 </div>
+                <!-- <div class="row filter-row" id="rowFiltros" style="top:98px; z-index: 10; margin-top: 20px; display: none; background-color:#fff !important;width:100%"> -->
+                <div class="row filter-row" id="rowFiltros" style="position:fixed !important; top:90px; z-index: 10; margin-top: 20px; display: none; background-color:#fff !important;width:100%">
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroNome">
+                        <label class="focus-label">Nome</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroNumeroProcesso">
+                        <label class="focus-label">Número do Processo</label>
+                    </div>
+                </div>
+                @can('isAdmin')
+                <div class="col-sm-6 col-md-2">
+                    <div class="form-group form-focus focused">
+                        <select name="filtroIdFuncionario" id="filtroIdFuncionario" class="form-control floating">
+                            <option value=""></option>
+                            <?php
+                                $sqlUsers = DB::table('users')->get();
 
-            <div class="row filter-row" id="rowFiltros" style="margin-top: 20px; display: none;">
-               <div class="col-sm-6 col-md-3">
-                  <div class="form-group form-focus">
-                     <input class="form-control floating" type="text" name="filtroNome">
-                     <label class="focus-label">Nome</label>
-                  </div>
-               </div>
-               <div class="col-sm-6 col-md-3">
-                  <div class="form-group form-focus">
-                     <input class="form-control floating" type="text" name="filtroNumeroProcesso">
-                     <label class="focus-label">Número do Processo</label>
-                  </div>
-               </div>
-               <div class="col-sm-6 col-md-2">
-                  <div class="form-group form-focus focused">
-                     <select name="filtroIdFuncionario" id="filtroIdFuncionario" class="form-control floating">
-                        <option value=""># Selecione um funcionário para filtrar</option>
-                        <?php
-                            $sqlUsers = DB::table('users')->get();
-
-                            if(count($sqlUsers) > 0){
-                                foreach($sqlUsers as $dados){
-                                    echo '<option value="'.$dados->id.'" data-backgroundColor="'.$dados->backgroundColor.'" data-textColor="'.$dados->textColor.'">'.$dados->name.'</option>';
+                                if(count($sqlUsers) > 0){
+                                    foreach($sqlUsers as $dados){
+                                        echo '<option value="'.$dados->id.'" data-backgroundColor="'.$dados->backgroundColor.'" data-textColor="'.$dados->textColor.'">'.$dados->name.'</option>';
+                                    }
                                 }
-                            }
-                        ?>
-                     </select>
+                            ?>
+                        </select>
 
-                     <label class="focus-label">Funcionário</label>
-                  </div>
-               </div>
-               <div class="col-sm-2 col-md-1">
-                  <div class="form-group form-focus focused">
-                     <select name="filtroTypeValorPrecatorio" id="filtroTypeValorPrecatorio" class="form-control floating">
-						<option value="0">Acima</option>
-						<option value="1">Até</option>
-                     </select>
-                  </div>
-               </div>
-               <div class="col-sm-6 col-md-3">
-                  <div class="form-group form-focus focused">
-                     <select name="filtroValorPrecatorio" id="filtroValorPrecatorio" class="form-control floating">
-                        <option value=""># Selecione o valor do precatório</option>
-						<option value="50000.00">R$ 50.000,00</option>
-                        <option value="100000.00">R$ 100.000,00</option>
-                        <option value="200000.00"> R$ 200.000,00</option>
-                        <option value="300000.00"> R$ 300.000,00</option>
-                        <option value="400000.00"> R$ 400.000,00</option>
-                        <option value="500000.00"> R$ 500.000,00</option>
-                        <option value="750000.00"> R$ 700.000,00</option>
-                        <option value="1000000.00"> R$ 1.000.000,00</option>
-                        <option value="1250000.00"> R$ 1.250.000,00</option>
-                        <option value="1500000.00"> R$ 1.500.000,00</option>
-                        <option value="1750000.00"> R$ 1.750.000,00</option>
-                        <option value="2000000.00"> R$ 2.000.000,00</option>
-                     </select>
-                  </div>
-               </div>
-               <div class="col-sm-6 col-md-3">
-                  <div class="form-group form-focus">
-                     <input class="form-control floating" type="text" name="filtroDataProcesso" id="filtroDataProcesso">
-                     <label class="focus-label">Data do Processo</label>
-                  </div>
-               </div>
+                        <label class="focus-label">Funcionário</label>
+                    </div>
+                </div>
+                    @endcan
+                <div class="col-sm-2 col-md-1">
+                    <div class="form-group form-focus focused">
+                        <select name="filtroTypeValorPrecatorio" id="filtroTypeValorPrecatorio" class="form-control floating">
+                            <option value=""></option>
+                            <option value="0">Acima</option>
+                            <option value="1">Até</option>
+                        </select>
+                        <label class="focus-label">Acima</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus focused">
+                        <select name="filtroValorPrecatorio" id="filtroValorPrecatorio" class="form-control floating">
+                            <option value=""></option>
+                            <option value="50000.00">R$ 50.000,00</option>
+                            <option value="100000.00">R$ 100.000,00</option>
+                            <option value="200000.00"> R$ 200.000,00</option>
+                            <option value="300000.00"> R$ 300.000,00</option>
+                            <option value="400000.00"> R$ 400.000,00</option>
+                            <option value="500000.00"> R$ 500.000,00</option>
+                            <option value="750000.00"> R$ 700.000,00</option>
+                            <option value="1000000.00"> R$ 1.000.000,00</option>
+                            <option value="1250000.00"> R$ 1.250.000,00</option>
+                            <option value="1500000.00"> R$ 1.500.000,00</option>
+                            <option value="1750000.00"> R$ 1.750.000,00</option>
+                            <option value="2000000.00"> R$ 2.000.000,00</option>
+                        </select>
+                        <label class="focus-label">Selecione o valor do precatório</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroDataProcesso" id="filtroDataProcesso">
+                        <label class="focus-label">Ordem Cronológica</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroDataTelefone" id="filtroDataTelefone">
+                        <label class="focus-label">Telefone</label>
+                        <div class="autocomplete-suggestions" hidden id="telefoneSuggestions">
+                            <div class="autocomplete-suggestion" hidden id="telefoneSuggestionsLoad">Pesquisando...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroDataCPF" id="filtroDataCPF">
+                        <label class="focus-label">CPF</label>
+                        <div class="autocomplete-suggestions" hidden id="telefoneSuggestions">
+                            <div class="autocomplete-suggestion" hidden id="telefoneSuggestionsLoad">Pesquisando...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group form-focus">
+                        <input class="form-control floating" type="text" name="filtroDataBaseProcesso" id="filtroDataBaseProcesso">
+                        <label class="focus-label">Data Base</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <a href="#" class="btn btn btn-dark btn-block" id="btnFiltrar"><i class="la la-search"></i> Procurar </a>
+                </div>
+                </div>
 
-               <div class="col-sm-6 col-md-3">
-                  <a href="#" class="btn btn-success btn-block" id="btnFiltrar"><i class="la la-search"></i> Procurar </a>
-               </div>
-            </div>
+                <div class="row filter-row" id="rowEnvioLote" style="position:fixed !important; top:98px; z-index: 10; margin-top: 20px; display: none; background-color:#fff !important;width:100%"">
+                <!-- <div class="row filter-row" id="rowEnvioLote" style="top:98px; z-index: 10; margin-top: 20px; display: none; background-color:#fff !important;width:100%""> -->
 
 
-							<div class="kanban-cont">
+
+                </div>
+							<div class="kanban-cont" id="kabanhidden" style="margin-top:40px;" hidden>
 								<div class="kanban-list karban-branco">
 									<div class="kanban-header" style="border-left: 1px solid #2e2e2e;">
 										<p class="status-title">Novo</p>
@@ -337,8 +392,13 @@
 									</div>
 
 								</div>
-							</div>
 
+							</div>
+                            <div class="d-flex justify-content-center" >
+                                    <div class="spinner-border" role="status"  id="loadingPagination" hidden>
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                            </div>
 
 				<!-- /Content End -->
             </div>
@@ -391,7 +451,7 @@
 
                             <input type="hidden" name="sms_idprocesso">
 
-                            <div class="mb-3 mt-3"><button type="button" id="enviarSms" class="btn btn-success">Enviar SMS</button></div>
+                            <div class="mb-3 mt-3"><button type="button" id="enviarSms" class="btn btn btn-dark">Enviar SMS</button></div>
                         </div>
                     </div>
                     <div class="content-full tab-pane" id="tab2">
@@ -399,6 +459,93 @@
                     </div>
                 </div>
         </div>
+        <div id="mySidepanelFilter" class="sidepanel message-view chat-profile-view chat-sidebar">
+            <a href="#" class="closebtn" id="toggleEnvioLoteClose"><i class="la la-times"></i></a>
+            <div class="chat-window video-window">
+				<div class="fixed-header">
+					<ul class="nav nav-tabs nav-tabs-bottom">
+						<li class="nav-item"><a class="nav-link active" data-toggle="tab">Envio de Processo em Lote</a></li>
+					</ul>
+				</div>
+                <div style="margin-top:10px">
+                <div class="col-sm-12">
+                        <div class="form-group">
+                            <input class="form-control" type="text" placeholder="Nome do Processo" name="reqteName"  id="reqteName">
+                            <!-- <label class="focus-label">Nome do Processo</label> -->
+                            <div class="autocomplete-suggestions" hidden id="reqteSuggestions">
+                                <div class="autocomplete-suggestion" hidden id="reqteSuggestionsLoad">Pesquisando...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fixed-header">
+					<ul class="nav nav-tabs nav-tabs-bottom">
+						<li class="nav-item"><a class="nav-link active" data-toggle="tab">Enviar para...</a></li>
+					</ul>
+				</div>
+                <div style="margin-top:10px">
+                    <div class="col-sm-12">
+                        <div class="form-group ">
+                            <input class="form-control floating" type="text" placeholder="Nome do Funcionario" name="nomeFuncionario" id="nomeFuncionario">
+                            <!-- <label class="focus-label"></label> -->
+                            <div class="autocomplete-suggestions" hidden id="nomeFuncionarioSuggestions">
+                                <div class="autocomplete-suggestion" hidden id="nomeFuncionarioSuggestionsLoad">Pesquisando...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 ">
+                        <div class="form-group">
+                            <select name="filtroTipoProcessoLote" id="filtroTipoProcessoLote" class="form-control">
+                                <option value="">Selecione a Agenda</option>
+                                <?php
+                                    foreach($arrayTiposAgenda as $key => $value){
+                                        echo '<option value="'.$key.'">'.$value.'</option>';
+                                    }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                                <select name="filtroSubtipoProcessoLote" id="filtroSubtipoProcessoLote" class="form-control">
+                                    <option value="">Selecione a subtipo</option>
+                                </select>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                        <select name="situacaoLote" id="situacaoLote" class="form-control custom-select">
+                            <option value="">Selecione a Situação</option>
+                            <option value="1">Novo</option>
+                            <option value="2">Tentando Contato</option>
+                            <option value="3">Sem interesse</option>
+                            <option value="4">Proposta Enviada</option>
+                            <option value="6">Cliente Avaliando</option>
+                            <option value="7">Cessão Agendada</option>
+                            <option value="8">Pagamento Realizado</option>
+                        </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 ">
+                    <a href="#" class="btn btn-dark" id="btnEnviarLote"><i class="la la-send"></i> Enviar</a>
+                </div>
+                <div class="col-sm-12" style="margin:10px; max-height:400px; min-height:400px">
+                    <table class="table table-resposive">
+                        <thead>
+                            <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loteTable" style="overflow:scroll;  max-height:350px">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
         <style type="text/css">
             #divExcluirProcesso{
                 position: absolute;
@@ -424,13 +571,17 @@
                 height: 100%;
                 width: 0;
                 position: fixed;
-                z-index: 10000;
+                z-index: 99999;
                 top: 0;
                 right: 0;
                 background-color: #FFFFFF;
-                overflow-x: hidden;
                 padding-top: 60px;
                 transition: 0.5s;
+                overflow:scroll;
+            }
+            .message-view{
+                z-index: 100000 !important;
+
             }
             .sidepanel .closebtn {
                 position: absolute;
@@ -438,6 +589,10 @@
                 right: 25px;
                 font-size: 36px;
                 margin-left: 50px;
+            }
+            .nav-tabs.nav-tabs-solid > li > a.active, .nav-tabs.nav-tabs-solid > li > a.active:hover, .nav-tabs.nav-tabs-solid > li > a.active:focus {
+                background-color:#343a40;
+                border-color:#343a40;
             }
         </style>
 
@@ -476,9 +631,9 @@
 }
 </style>
 <!-- Modal Editar Processo -->
-<div id="modalEditarProcesso" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-fair" style="">
-        <div class="modal-content" >
+<div id="modalEditarProcesso" class="modal custom-modal fade" role="dialog" style="z-index: -1">
+    <div class="modal-dialog modal-fair" >
+        <div class="modal-content" style="width:85%">
             <div class="modal-header">
                 <h4 class="modal-title">Visualizar Processo</h4>
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -488,11 +643,12 @@
                 <ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded nav-justified">
                     <li class="nav-item"><a class="nav-link active" href="#tabDadosProcesso" data-toggle="tab">Dados do Processo</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabCalculadora" data-toggle="tab">Calculadora</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tabAgendamentoContato" data-toggle="tab">Agendar de Contato</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tabAgendamentoContato" data-toggle="tab">Agendar Contato</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabDocumentos" data-toggle="tab">Documentos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#tabContratos" data-toggle="tab">Gerar Contratos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tabCedentes" data-toggle="tab">Cadastrar Cedentes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tabCedentes" data-toggle="tab">Cedentes</a></li>
 					<li class="nav-item"><a class="nav-link" href="#tabCarta" data-toggle="tab">Carta</a></li>
+					<li class="nav-item"><a class="nav-link" href="#tabTrocarAgenda" data-toggle="tab">Trocar de Agenda</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane show active" id="tabDadosProcesso">
@@ -508,67 +664,83 @@
                                             <div class="col-sm-12">
                         						<div class="form-group">
                         							<label>Cabeça de Ação</label>
-                        							<input class="form-control" type="text" name="mepCabecaAcao" id="mepCabecaAcao" readonly="readonly">
+                        							<input class="form-control" type="text" name="mepCabecaAcao" id="mepCabecaAcao">
                         						</div>
                         					</div>
                                         </div>
 
 										<div class="row">
                                             <div class="col-sm-12">
-                        						<div class="form-group">
-                        							<label>Entidade Devedora</label>
-                        							<input class="form-control" type="text" name="mepEntidade" id="" readonly="readonly">
+											     <div class="form-group">
+                        							<label>Nome do Cliente</label>
+                        							<input class="form-control" type="text" name="mepRequerente" id="mepRequerente">
                         						</div>
                         					</div>
                                         </div>
+										<div class="row">
+										       <div class="col-sm-12">
+                        						<div class="form-group">
+                        							<label>Número do Processo</label>
+                        							<input class="form-control" type="text" name="mepNumeroProcesso" id="mepNumeroProcesso">
+                                                    <a href="" id="mepexternallink" target="_blank" ><i class="fa fa-external-link" aria-hidden="true"></i></a>
+                        						</div>
+                        					</div>
+										</div>
 
                                         <div class="row">
-                                            <div class="col-sm-6">
-                        						<div class="form-group">
-                        							<label>Nome do Cliente</label>
-                        							<input class="form-control" type="text" name="mepRequerente" id="mepRequerente" readonly="readonly">
+                                            <div class="col-sm-12">
+											      <div class="form-group">
+                        							<label>Entidade Devedora</label>
+                        							<input class="form-control" type="text" name="mepEntDevedora" id="mepEntDevedora">
                         						</div>
+
                         					</div>
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>CPF</label>
-                        							<input class="form-control" type="text" name="mepCpf" id="mepCpf" readonly="readonly">
-                                                    <span class="input-group-addon" id="atualizaCPF" >Atualizar Contatos</span> 
+                                                    <div class="input-group mb-3">
+                                                        <input type="text" class="form-control" placeholder="CPF" aria-label="Username" aria-describedby="basic-addon1"  name="mepCpf" id="mepCpf">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text" style="background:orange; color:white;" id="score">SC:</span>
+                                                        </div>
+                                                    </div>
+                                                    <span class="input-group-addon" id="atualizaCPF" >Atualizar Dados</span>
                                                     <div class="spinner-border spinner-border-sm hidden" id="loadingCPF" role="status" hidden>
                                                         <span class="sr-only">Loading...</span>
                                                     </div>
+                        							<!-- <input class="form-control" type="text" name="mepCpf" id="mepCpf"> -->
+                                                   
+                        						</div>
+                        					</div>
+
+                                            <div class="col-sm-6">
+                        						<div class="form-group">
+                        							<label>Ordem Cronológica</label>
+                        							<input class="form-control" type="text" name="mepOrdemCronologica" id="mepOrdemCronologica">
                         						</div>
                         					</div>
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-sm-6">
+                                            <div class="col-sm-12">
                         						<div class="form-group">
-                        							<label>Número do Processo</label>
-                        							<input class="form-control" type="text" name="mepNumeroProcesso" id="mepNumeroProcesso" readonly="readonly">
-                                                    <a href="" id="mepexternallink" target="_blank" ><i class="fa fa-external-link" aria-hidden="true"></i></a>
-                        						</div>
-                        					</div>
-                                            <div class="col-sm-6">
-                        						<div class="form-group">
-                        							<label>Ordem Cronológica</label>
-                        							<input class="form-control" type="text" name="mepOrdemCronologica" id="mepOrdemCronologica" readonly="readonly">
+                        							<label>Data de Nascimento</label>
+                        							<input class="form-control" type="date" name="mepDataNascimento" id="mepDataNascimento" >
                         						</div>
                         					</div>
                                         </div>
-
                                         <div class="row">
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>EP do Processo</label>
-                        							<input class="form-control" type="text" name="mepExp" id="mepExp" readonly="readonly">
+                        							<input class="form-control" type="text" name="mepExp" id="mepExp">
                         						</div>
                         					</div>
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>Indice de Data Base</label>
                         							<div class="cal-icon">
-                        								<input class="form-control datetimepicker" type="text" name="mepIndiceDataBase" id="mepIndiceDataBase" readonly="readonly">
+                        								<input class="form-control datetimepicker" type="text" name="mepIndiceDataBase" id="mepIndiceDataBase">
                         							</div>
                         						</div>
                         					</div>
@@ -578,13 +750,13 @@
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>Valor Principal</label>
-                        							<input class="form-control" type="text" name="mepValorPrincipal" id="mepValorPrincipal" readonly="readonly">
+                        							<input class="form-control" type="text" name="mepValorPrincipal" id="mepValorPrincipal">
                         						</div>
                         					</div>
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>Valor Juros</label>
-                        							<input class="form-control" type="text" name="mepValorJuros" id="mepValorJuros" readonly="readonly">
+                        							<input class="form-control" type="text" name="mepValorJuros" id="mepValorJuros">
                         						</div>
                         					</div>
                                         </div>
@@ -601,7 +773,6 @@
                                                     '2' => 'Tentando Contato',
                                                     '3' => 'Sem interesse',
                                                     '4' => 'Proposta Enviada',
-                                                    '5' => 'Negociação',
                                                     '6' => 'Cliente Avaliando',
                                                     '7' => 'Parecer',
                                                     '8' => 'Cessão Agendada',
@@ -612,7 +783,7 @@
 
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" name="btnSalvarEdicao" id="btnSalvarEdicao" class="btn btn-primary submit-btn" >Salvar Edição</button>
+                                                <button type="button" name="btnSalvarEdicao" id="btnSalvarEdicao" class="btn btn btn-dark submit-btn" >Salvar Edição</button>
                                             </div>
                                         </div>
 
@@ -624,7 +795,7 @@
                             		<div class="chat-main-wrapper">
                             			<div class="col-lg-12 message-view task-view">
                             				<div class="chat-window">
-                            					<div class="chat-contents" style="background-color: #426a75">
+                            					<div class="chat-contents">
                             						<div class="chat-content-wrap">
                             							<div class="chat-wrap-inner">
                             								<div class="chat-box">
@@ -648,12 +819,12 @@
                             					<div class="chat-footer">
                             						<div class="message-bar">
                             							<div class="message-inner">
-                            								<div class="message-area">
+                            								<div class="message-area" style="height:200px !important;">
                             									<div class="input-group">
-                            										<textarea class="form-control" placeholder="Digite sua mensagem aqui..." id="mensagemChat"></textarea>
-                            										<span class="input-group-append">
+                            										<textarea class="form-control" placeholder="Aperte enter para enviar sua mensagem..." id="mensagemChat" style="height:150px;"></textarea>
+                            										<!-- <span class="input-group-append">
                             											<button class="btn  btn-outline-dark" type="button" id="btnEnviarChat"><i class="fa fa-send"></i></button>
-                            										</span>
+                            										</span> -->
                             									</div>
                             								</div>
                             							</div>
@@ -670,28 +841,61 @@
                             <div class="col-md-6">
                                 <div class="card flex-fill">
 									<div class="card-header">
-										<h5 class="card-title mb-0">Telefones</h5>
+                                    <nav>
+                                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                        <a class="nav-link active" id="nav-home-tab" data-toggle="tab" href="#telefones" role="tab" aria-controls="nav-home" aria-selected="true">Telefones</a>
+                                        <a class="nav-link" id="nav-profile-tab" data-toggle="tab" href="#possiveisParentes" role="tab" aria-controls="possiveisParentes" aria-selected="false">Possiveis Parentes</a>
+                                    </div>
+                                    </nav>
+										<!-- <h5 class="card-title mb-0">Telefones</h5> -->
 									</div>
-									<div class="card-body">
-                                        <div class="row filter-row">
-                                            <div class="col-sm-10">
-                                                <input name="mepAdicionarTelefoneText" class="form-control form-control-lg">
+                                    <div class="tab-content" id="pills-tabContent">
+                                    <div class="tab-pane fade show active" id="telefones" role="tabpanel" aria-labelledby="telefones-tab">
+                                        <div class="card-body" >
+                                            <div class="row filter-row">
+                                                <div class="col-sm-10">
+                                                    <input name="mepAdicionarTelefoneText" class="form-control form-control-lg">
+                                                </div>
+                                                <div class="col-sm-2" style="display: flex;align-items: center;">
+                                                    <span style="font-size: 32px;" id="clickAddTelefone"><i class="la la-plus-circle"></i></span>
+                                                </div>
                                             </div>
-                                            <div class="col-sm-2" style="display: flex;align-items: center;">
-                                                <span style="font-size: 32px;" id="clickAddTelefone"><i class="la la-plus-circle"></i></span>
+
+                                            <table class="table table-hover mb-0 mt-3">
+                                                <thead>
+                                                    <th>Telefone</th>
+                                                    <th>Status</th>
+                                                    <th>Ações</th>
+                                                </thead>
+                                                <tbody id="tbodyTelefones">
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                        <div class="tab-pane fade" id="possiveisParentes" role="tabpanel" aria-labelledby="possiveisParentes-tab">
+                                            <div class="card-body">
+                                                <div class="row filter-row">
+                                                    <div class="col-sm-10">
+                                                        <input name="mepAdicionarTelefoneParenteText" class="form-control form-control-lg">
+                                                    </div>
+                                                    <div class="col-sm-2" style="display: flex;align-items: center;">
+                                                        <span style="font-size: 32px;" id="clickAddTelefoneParente"><i class="la la-plus-circle"></i></span>
+                                                    </div>
+                                                </div>
+
+                                                <table class="table table-hover mb-0 mt-3">
+                                                    <thead>
+                                                        <th>Telefone</th>
+                                                        <th>Status</th>
+                                                        <th>Ações</th>
+                                                    </thead>
+                                                    <tbody id="tbodyTelefonesParente">
+
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
-
-                                        <table class="table table-hover mb-0 mt-3">
-                                            <thead>
-                                                <th>Telefone</th>
-                                                <th>Status</th>
-                                                <th>Ações</th>
-                                            </thead>
-                                            <tbody id="tbodyTelefones">
-
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -753,6 +957,13 @@
                                             <div class="col-sm-6">
                         						<div class="form-group">
                         							<label>Indice de Correção Até</label>
+                                                    <span id="atualizaCorrecao" style="cursor: pointer;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+                                                        <path fill-rule="evenodd" d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 0 0-.214-.468l.893-.45a7.976 7.976 0 0 1 .45 1.088l-.95.313a7.023 7.023 0 0 0-.179-.483zm.53 2.507a6.991 6.991 0 0 0-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 0 1-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 0 1-.401.432l-.707-.707z"/>
+                                                        <path fill-rule="evenodd" d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/>
+                                                        <path fill-rule="evenodd" d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/>
+                                                    </svg>
+                                                    </span>
                         							<div class="cal-icon">
                         								<input class="form-control datetimepicker" type="text" name="mcIndiceCorrecaoAte" id="mcIndiceCorrecaoAte">
                         							</div>
@@ -767,19 +978,19 @@
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-sm-6">
-                        						<div class="form-group">
+                                           <div class="col-sm-6">
+                        						<!-- <div class="form-group">
                         							<label>Data de Emissão do Precatório</label>
-                        							<div class="cal-icon">
-                        								<input class="form-control datetimepicker" type="text" name="mcDataEmissaoPrecatorio" id="mcDataEmissaoPrecatorio">
-                        							</div>
-                        						</div>
-                                                <div class="form-group">
-                        							<label>Data de Vencimento</label>
-                        							<div class="cal-icon">
-                        								<input class="form-control datetimepicker" type="text" name="mcDataVencimento" id="mcDataVencimento">
-                        							</div>
-                        						</div>
+                        							<div class="cal-icon"> -->
+                        								<input class="form-control" type="hidden" name="mcDataEmissaoPrecatorio" id="mcDataEmissaoPrecatorio">
+                        							<!-- </div>
+                        						</div> -->
+                                                <!-- <div class="form-group"> -->
+                        							<!-- <label>Data de Vencimento</label> -->
+                        							<!-- <div class="cal-icon"> -->
+                        								<input class="form-control" type="hidden" name="mcDataVencimento" id="mcDataVencimento">
+                        							<!-- </div> -->
+                        						<!-- </div> -->
                         					</div>
                                             <div class="col-sm-6 text-center">
                                                 <div class="stats-box mb-4">
@@ -907,7 +1118,7 @@
                 									</div>
                 								</div>
                                             </div>
-                                            <div class="col-md-3">
+                                           <!-- <div class="col-md-3">
                                                 <div class="card">
                 									<div class="card-body">
                 										<div class="d-flex justify-content-between mb-3">
@@ -921,7 +1132,7 @@
                 										</div>
                 									</div>
                 								</div>
-                                            </div>
+                                            </div> -->
                                             <div class="col-md-3">
                                                 <div class="card">
                 									<div class="card-body">
@@ -942,7 +1153,7 @@
                                         <div class="row">
                                             <div class="col-sm-6">
                         						<div class="form-group">
-                        							<label>Total Cedido</label>
+                        							<label>Saldo Líquido Disponível</label>
                         							<input class="form-control" type="text" name="mcCessaoSemHonorarios" id="mcCessaoSemHonorarios">
                         						</div>
                         					</div>
@@ -951,7 +1162,7 @@
                 									<div class="card-body">
                 										<div class="d-flex justify-content-between mb-3">
                 											<div>
-                												<span class="d-block">Total Cedido</span>
+                												<span class="d-block">Saldo Líquido Disponível</span>
                 											</div>
                 										</div>
                 										<h3 class="mb-3" id="mcCessaoSemHonorariosResultado">R$ 800,00</h3>
@@ -989,7 +1200,7 @@
 
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" name="btnAtualizarCalculos" id="btnAtualizarCalculos" class="btn btn-primary submit-btn">Atualizar Calculos</button>
+                                                <button type="button" name="btnAtualizarCalculos" id="btnAtualizarCalculos" class="btn btn btn-dark submit-btn">Atualizar Calculos</button>
                                                 <span style="display: none;" id="loadingGif">
                                                     <img src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif">
                                                 </span>
@@ -1032,7 +1243,7 @@
 
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" class="btn  btn-outline-info mac_submit" id="mac_submit">Salvar Lembrete</button>
+                                                <button type="button" class="btn  btn-outline-dark mac_submit" id="mac_submit">Salvar Lembrete</button>
                                             </div>
                                         </div>
 
@@ -1083,7 +1294,7 @@
 
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <button type="button" name="btnEnviarArquivo" id="btnEnviarArquivo" class="btn btn-primary submit-btn">Enviar Arquivo</button>
+                                                <button type="button" name="btnEnviarArquivo" id="btnEnviarArquivo" class="btn btn btn-dark submit-btn">Enviar Arquivo</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1109,11 +1320,76 @@
                         </div>
                     </div>
 					<div class="tab-pane" id="tabCarta">
-					<div class="card flex-fill">
+					    <div class="card flex-fill">
 					        <div class="card-header">
                                 <h5 class="card-title mb-0">Gerar Carta Cliente</h5>
                             </div>
+                            <div class="card-body">
+                                <form method="post" action="{{route('cadastrar.carta')}}">
+                                    <div class="row">
+                                        @csrf
+                                        <input type="hidden" name="mccidProcessoCarta" class="form-control form-control2" id="mccidProcessoCarta">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn btn-dark" >Gerar Carta Cliente</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+					    </div>
 					</div>
+                    <div class="tab-pane" id="tabTrocarAgenda">
+					    <div class="card flex-fill">
+					        <div class="card-header">
+                                <h5 class="card-title mb-0">Trocar Agenda do Processo</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="formAlterarAgenda" method="post" action="{{route('alterar.agenda')}}">
+                                    <div class="row">
+                                        <input type="hidden" name="mccidProcessoChangeAgenda" class="form-control form-control2" id="mccidProcessoChangeAgenda">
+                                    </div>
+                                    @csrf
+                                    <div class="col-md-6 form-group">
+                                        <label>Nova agenda</label>
+                                        {{ Form::select('tipoProcessoDisable',  array_merge([0 => 'Selecione um Tipo'], $arrayTiposAgenda), null, ['class' => 'custom-select type-change-agenda-disabled disable']) }}
+                                    </div>
+                                    <div class="form-group col-sm-12">
+                                        <label>Sub-tipo da Agenda</label>
+                                        <select id="subTipoProcessoDisable" class="custom-select">
+                                            <option value="">Selecione o Subtipo</option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <div class="spinner-border spinner-border-sm hide disabled" role="status" id="subTipoProcessoLoadDisable" hidden>
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label>Nova agenda</label>
+                                        {{ Form::select('tipoProcesso',  array_merge([0 => 'Selecione um Tipo'], $arrayTiposAgenda), null, ['class' => 'custom-select type-change-agenda']) }}
+                                    </div>
+                                    <div class="form-group col-sm-12">
+                                        <label>Sub-tipo da Agenda</label>
+                                        <select name="subTipoProcesso" id="subTipoProcesso" class="custom-select">
+                                            <option value="">Selecione o Subtipo</option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <div class="spinner-border spinner-border-sm hide" role="status" id="subTipoProcessoLoad" hidden>
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button type="button" id="btnAlterarAgenda" class="btn btn btn-dark" >Alterar Agenda</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+					    </div>
 					</div>
                     <div class="tab-pane" id="tabCedentes">
                         <div class="card flex-fill">
@@ -1222,7 +1498,7 @@
 
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <button type="button" class="btn btn-primary" id="btnCadastrarCedenteProcesso">Cadastrar Cedente</button>
+                                        <button type="button" class="btn btn btn-dark" id="btnCadastrarCedenteProcesso">Cadastrar Cedente</button>
                                     </div>
                                 </div>
                             </div>
@@ -1327,7 +1603,7 @@
                                     </table>
 
                                     <button type="button" name="btnGerarContratoNormal" id="btnGerarContratoNormal"
-                                    class="btn btn-primary">Gerar Contrato Selecionado</button>
+                                    class="btn btn btn-dark">Gerar Contrato Selecionado</button>
                                 </div>
                                 <div id="mgcMostraGerarCedentes" style="display: none;">
                                     <div class="row">
@@ -1384,7 +1660,7 @@
                                     </table>
 
                                     <button type="button" name="btnGerarContratoCedentes" id="btnGerarContratoCedentes"
-                                    class="btn btn-info">Gerar Contrato com cedentes selecionados</button>
+                                    class="btn btn-dark">Gerar Contrato com cedentes selecionados</button>
                                 </div>
 
                             </div>
@@ -1394,6 +1670,14 @@
 
             </div>
             <div class="modal-footer" style="justify-content: flex-end;">
+                @can('isAdmin')
+                <button type="button" class="btn  btn-outline-danger btn-sm clickRemoverAgenda" data-id="{{}}">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>Remover da Lista
+                </button>
+                @endcan
                 <button type="button" id="abrirSms" class="btn  btn-outline-dark btn-sm">Guia SMS</button>
                 @can('isAdmin')
                 <button type="button" id="abrirSms" class="btn btn-secondary btn-sm"><span id="mepDataUltimaAbertura"></span></button>
@@ -1418,7 +1702,7 @@
                         <div class="col-md-6 form-group">
                             <label>Selecione o tipo de processo</label>
                             <select name="filtroTipoProcesso" id="filtroTipoProcesso" class="form-control">
-                                <option value=""># Todos os tipos</option>
+                                <option value="">Todos os tipos</option>
                                 <?php
                                     foreach($arrayTiposAgenda as $key => $value){
                                         echo '<option value="'.$key.'">'.$value.'</option>';
@@ -1429,13 +1713,13 @@
                         <div class="col-md-6 form-group">
                             <label>Selecione um sub-tipo</label>
                             <select name="filtroSubtipoProcesso" id="filtroSubtipoProcesso" class="form-control">
-                                <option value=""># Todos</option>
+                                <option value="">All</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="submit-section">
-    					<button class="btn btn-info submit-btn" type="button" id="btnConfirmarFiltroAgenda">Filtrar</button>
+    					<button class="btn btn-dark submit-btn" type="button" id="btnConfirmarFiltroAgenda">Filtrar</button>
     				</div>
                 </form>
 
@@ -1459,6 +1743,14 @@
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
 			</div>
 			<div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+						<div class="form-group">
+							<label>Entidade Devedora</label>
+							<input class="form-control" type="text" name="mnpEntidadeDevedora">
+						</div>
+					</div>
+                </div>
                 <div class="row">
                     <div class="col-sm-12">
 						<div class="form-group">
@@ -1529,7 +1821,7 @@
 						</div>
 					</div>
                 </div>
-
+                @can('isAdmin')
                 <div class="row">
                     <div class="form-group col-sm-12">
                         <label>Colaborador Responsável</label>
@@ -1537,40 +1829,58 @@
 
                     </div>
                 </div>
+                @endcan
                 <div class="row">
                     <div class="form-group col-sm-12">
                         <label>Tipo da Agenda</label>
-                        {{ Form::select('mnpTipoProcesso', $arrayTiposAgenda, null, ['class' => 'custom-select']) }}
+                        {{ Form::select('mnpTipoProcesso',  array_merge([0 => 'Selecione um Tipo'], $arrayTiposAgenda), null, ['class' => 'custom-select type-agenda']) }}
 
                     </div>
                 </div>
+                <div class="row">
+                <div class="input-group">
+                    <div class="form-group col-sm-12">
+                        <label>Sub-tipo da Agenda</label>
+                        <select name="mnpSubTipoProcesso" id="mnpSubTipoProcesso" class="custom-select" style="width:80%">
+                            <option value="">Selecione o Subtipo</option>
+                        </select>
+                        <div class="input-group-append">
+                        <div class="spinner-border spinner-border-sm hide" role="status" id="mnpSubTipoProcessoLoad" hidden>
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        </div>
+                        </div>
 
-                <div class="submit-section">
-					<button class="btn btn-primary submit-btn" type="button" id="mnpBtnSalvar">Salvar Processo</button>
+                    </div>
+                </div>
+					<div class="submit-section">
+					<button class="btn btn btn-dark submit-btn" type="button" id="mnpBtnSalvar">Salvar Processo</button>
 				</div>
+                </div>
 
             </div>
         </div>
     </div>
 </div>
 
+
 <div id="modalListaNotificacoes" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog  modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Notificações de Hoje - {{ date('d/m/Y') }}</h4>
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
 			</div>
-			<div class="modal-body">
+			<div class="modal-body" style="overflow-y:scroll; height: 400px;">
 
                 <table class="table">
                     <thead>
                         <th>Colaborador</th>
                         <th>Comentário</th>
                         <th>Numero do Processo</th>
-                        <th>Cabeça da Ação</th>
+                        <th>Nome do Cliente</th>
                     </thead>
-                    <tbody id="mln_tbody">
+                    <tbody id="mln_tbody" >
 
                     </tbody>
                 </table>
@@ -1590,20 +1900,22 @@
    <script src="/assets/js/moment.min.js"></script>
    <script src="/assets/js/bootstrap-datetimepicker.min.js"></script>
    <script src="/assets/js/jquery.mask.min.js"></script>
+   <script src="/assets/js/jquery-autocomplete.js"></script>
    <script src="/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
    <script src="/assets/js/app.js"></script>
+   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
    <script src="https://momentjs.com/downloads/moment.js"></script>
    <script type="text/javascript">
         $(document).ready(function(e){
             setInterval(validaNumeros, 60000);
+            var arrayLote = [];
             $('#modalFiltroTipoAgenda').modal('show');
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-
             $.ajax({
                 url: '/app/agenda/recupera-lembretes',
                 method: 'GET',
@@ -1611,7 +1923,7 @@
                     if(res.status == 'ok'){
                         var abremodal = 0;
                         $.map( res.array_response, function(val,i) {
-                            $('#mln_tbody').append('<tr><td>'+val.nome+'</td><td>'+val.comentario+'</td><td>'+val.processo_de_origem+'</td><td>'+val.cabeca_de_acao+'</td></tr>');
+                            $('#mln_tbody').append('<tr><td>'+val.nome+'</td><td>'+val.comentario+'</td><td>'+val.processo_de_origem+'</td><td>'+val.reqte+'</td></tr>');
 
                             abremodal = 1;
                         });
@@ -1652,6 +1964,45 @@
                 }
 
             }
+            $('.clickRemoverAgenda').click(function(e){
+                swal.fire({
+                title: "Você tem certeza disso?",
+                text: "Você realmente quer remover esse processo da agenda?",
+                icon: "warning",
+                buttons: true,
+                showCancelButton:true,
+                dangerMode: true,
+                })
+                .then((response) => {
+                    if (response.isConfirmed) {
+                        var id = $(this).attr('data-id');
+                        $.ajax({
+                            url: '/app/robo/remover-agenda/' + id,
+                            method: 'GET',
+                            success: function(res){
+                                if(res.status == 'ok'){
+                                    swal.fire("Tudo certo! Processo foi removido da agenda!", {
+                                        icon: "success",
+                                    });
+                                    refiltrar();
+                                }else{
+                                    swal.fire(res.response);
+                                    $('#modalEditarProcesso').modal('hide')
+                                }
+                            },error: function(err){
+                                swal.fire("Ops, tivemos um problema! mas não removemos o processo da agenda!");
+                                $('#modalEditarProcesso').modal('hide')
+                            },complete: function(){
+                                $('#modalEditarProcesso').modal('hide')
+                            }
+                        });
+
+                    } else {
+                        swal.fire("O processo não foi removido da agenda!");
+                    }
+                });
+
+            });
             $('#atualizaCPF').click(function(e){
                 var cpf = $('#mepCpf').val();
                 var idProcesso = $('#mepIdProcesso').val();
@@ -1661,6 +2012,7 @@
                     url: 'agenda/capturaCpf/contatos?cpf='+cpf.replace(/[^\d]+/g,'')+'&idProcesso='+idProcesso,
                     method: 'GET',
                     success: function(res){
+                        $('#mepDataNascimento').val(res.data_nascimento);
                         $.each(res.telefones,function(index,val){
                             $('#tbodyTelefones').append('<tr>'+
                                 '<td>'+val.telefone+'</td>'+
@@ -1672,7 +2024,7 @@
                                         '</a>'+
                                         '<div class="dropdown-menu dropdown-menu-right">'+
                                             '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
-                                            '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(res.telefone)+'" target="_blank" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
                                         '</div>'+
                                     '</div>'+
                                 '</td>'+
@@ -1693,6 +2045,7 @@
                                 '</td>'+
                             '</tr>');
                         });
+                        $('#score').html('SC: '+res.score);
                         $('#loadingCPF').attr('hidden',true);
                         Swal.fire({
                         icon: 'success',
@@ -1735,7 +2088,147 @@
                     }
                 });
             });
+            $('.type-agenda').change(function(e){
+                $('#mnpSubTipoProcesso').attr('disabled', 'disabled');
+                $('#mnpSubTipoProcessoLoad').removeAttr('hidden');
+                var typeAgenda = $('select[name=mnpTipoProcesso] option:selected').val();
+                console.log(typeAgenda)
+                $('.appnd').remove();
+                $.ajax({
+                    url: '/app/agendas/recuperar-subtipo-ajax/'+typeAgenda,
+                    method: 'GET'
+                    ,success: function(res){
+                        if(res.status == 'ok'){
+                            $.map( res.response, function(val,i) {
+                                $('#mnpSubTipoProcesso').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
+                            });
+                        }else{
+                            Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+                        }
+                    },error: function(){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
 
+                    },complete: function(){
+                        $('#mnpSubTipoProcesso').removeAttr('disabled', 'disabled');
+                        $('#mnpSubTipoProcessoLoad').attr('hidden',true);
+
+                    }
+                });
+            });
+
+            $('.type-change-agenda-disabled').change(function(e){
+                $('#subTipoProcessoDisable').attr('disabled', 'disabled');
+                $('#subTipoProcessoLoadDisable').removeAttr('hidden');
+                var typeAgenda = $('select[name=tipoProcessoDisable] option:selected').val();
+
+                $('.appnd').remove();
+                $.ajax({
+                    url: '/app/agendas/recuperar-subtipo-ajax/'+typeAgenda,
+                    method: 'GET'
+                    ,success: function(res){
+                        if(res.status == 'ok'){
+                            $.map( res.response, function(val,i) {
+                                $('#subTipoProcessoDisable').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
+                                $('#subTipoProcessoDisable').val(val.id);
+                            });
+                        }else{
+                            Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+                        }
+                    },error: function(){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+
+                    },complete: function(){
+                        $('#subTipoProcessoLoadDisable').attr('hidden',true);
+
+                    }
+                });
+            });
+            function getSubAgenda(){
+                $('#subTipoProcessoDisable').attr('disabled', 'disabled');
+                $('#subTipoProcessoLoadDisable').removeAttr('hidden');
+                var typeAgenda = $('select[name=tipoProcessoDisable] option:selected').val();
+
+                $('.appnd').remove();
+                $.ajax({
+                    url: '/app/agendas/recuperar-subtipo-ajax/'+typeAgenda,
+                    method: 'GET'
+                    ,success: function(res){
+                        if(res.status == 'ok'){
+                            $.map( res.response, function(val,i) {
+                                $('#subTipoProcessoDisable').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
+                                $('#subTipoProcessoDisable').val(val.id);
+                            });
+                        }else{
+                            Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+                        }
+                    },error: function(){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+
+                    },complete: function(){
+                        $('#subTipoProcessoLoadDisable').attr('hidden',true);
+
+                    }
+                });
+            }
+            $('.type-change-agenda').change(function(e){
+                $('#subTipoProcesso').attr('disabled', 'disabled');
+                $('#subTipoProcessoLoad').removeAttr('hidden');
+                var typeAgenda = $('select[name=tipoProcesso] option:selected').val();
+
+                $('.appnd').remove();
+                $.ajax({
+                    url: '/app/agendas/recuperar-subtipo-ajax/'+typeAgenda,
+                    method: 'GET'
+                    ,success: function(res){
+                        if(res.status == 'ok'){
+                            $.map( res.response, function(val,i) {
+                                $('#subTipoProcesso').append('<option class="appnd" value="'+val.id+'">&nbsp; '+val.titulo+'</option>');
+                            });
+                        }else{
+                            Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+                        }
+                    },error: function(){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao recuperar os sub-tipos da agenda'
+                        });
+
+                    },complete: function(){
+                        $('#subTipoProcesso').removeAttr('disabled', 'disabled');
+                        $('#subTipoProcessoLoad').attr('hidden',true);
+
+                    }
+                });
+            });
             $('body').on('click', '.mac_submit', function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -1852,11 +2345,15 @@
                         });
                     }
                 });
-                $('#mySidepanel').css('width', '500px');
+                $('#mySidepanel').css('width', '400px');
             });
 
             $('#closeSidepanel').click(function(e){
                 $('#mySidepanel').css('width', '0px');
+            });
+            $('#atualizaCorrecao').click(function(e){
+                moment.locale('pt-br');
+                $('#mcIndiceCorrecaoAte').val(moment().format('DD/MM/YYYY'));
             });
 
             $('#sms_idMensagem').change(function(e){
@@ -1921,7 +2418,28 @@
             };
 
             $('#toggleFiltrosTexto').click(function(e){
-                $('#rowFiltros').toggle(200);
+                $('#rowFiltros').toggle();
+                var verificar = $('#rowFiltros').hasClass('colapse');
+                if(!verificar){
+                    $('#rowFiltros').addClass('colapse');
+                    $('#containerBody').css('top', "150px")
+                    $('#containerBody').css('position', "relative")
+                }else{
+                    $('#rowFiltros').removeClass('colapse');
+                    $('#containerBody').css('top', "-150px")
+                    $('#containerBody').css('position', "")
+
+                }
+
+            });
+            $('#toggleEnvioLote').click(function(e){
+                $('#mySidepanelFilter').css('width', '500px');
+                $('#kabanhidden').css('width', '75%')
+            });
+            $('#toggleEnvioLoteClose').click(function(e){
+                $('#mySidepanelFilter').css('width', '0px');
+                $('#kabanhidden').css('width', '100%')
+
             });
             $('#filtroIdFuncionario').change(function(e){
                 if( $(this).val() == '' ){
@@ -1963,6 +2481,132 @@
                   });
                }
             });
+            $("#filtroDataBaseProcesso").on("change paste keyup", function() {
+               var texto = $(this).val();
+               var texto = texto.toUpperCase();
+
+               if( texto == '' ){
+                  $('.divProcesso').each(function (index, value) {
+                     $(this).show();
+                  });
+               }else{
+                  $('.divProcesso').each(function (index, value) {
+                     var dataBase = $(this).attr('data-dataBase');
+
+                     if ( dataBase.indexOf( texto ) > -1 ) {
+                        $(this).show();
+                     }else{
+                        $(this).hide();
+                     }
+                  });
+               }
+            });
+
+            $("#filtroDataTelefone").on("change paste keyup", function() {
+               var texto = $(this).val();
+               var texto = texto.toUpperCase();
+
+               if( texto == '' ){
+                  $('.divProcesso').each(function (index, value) {
+                     $(this).show();
+                  });
+               }
+            });
+            $('#filtroDataTelefone').autocomplete({
+                serviceUrl: '/app/autocomplete/filterTelefone',
+                minChars:4,
+                showNoSuggestionNotice:true,
+                noSuggestionNotice: 'Nenhum Telefone associado a um Reqte encontrado!',
+                onSelect: function (suggestion) {
+                    if( $('#filtroDataTelefone').val() == '' ){
+                        $('.divProcesso').each(function(e){
+                            $(this).show();
+                        });
+                    }else{
+                        $('.divProcesso').each(function(e){
+                            var datauserid = $(this).attr('data-id');
+
+                            if( datauserid == suggestion.data ){
+                            $(this).show();
+                            }else{
+                            $(this).hide();
+                            }
+                        })
+                    }
+                }
+            });
+            $("#filtroDataCPF").on("change paste keyup", function() {
+               var texto = $(this).val();
+               var texto = texto.toUpperCase();
+
+               if( texto == '' ){
+                  $('.divProcesso').each(function (index, value) {
+                     $(this).show();
+                  });
+               }
+            });
+            $('#filtroDataCPF').autocomplete({
+                serviceUrl: '/app/autocomplete/filterCPF',
+                minChars:4,
+                showNoSuggestionNotice:true,
+                noSuggestionNotice: 'Nenhum Telefone associado a um Reqte encontrado!',
+                onSelect: function (suggestion) {
+                    if( $('#filtroDataCPF').val() == '' ){
+                        $('.divProcesso').each(function(e){
+                            $(this).show();
+                        });
+                    }else{
+                        $('.divProcesso').each(function(e){
+                            var datauserid = $(this).attr('data-id');
+                            if( datauserid == suggestion.data ){
+                            $(this).show();
+                            }else{
+                            $(this).hide();
+                            }
+                        })
+                    }
+                }
+            });
+            $('#nomeFuncionario').autocomplete({
+                serviceUrl: '/app/autocomplete/filterFuncionario',
+                minChars:3,
+                showNoSuggestionNotice:true,
+                noSuggestionNotice: 'Nenhum  um Colaborador encontrado!',
+            });
+            $('#reqteName').autocomplete({
+                serviceUrl: '/app/autocomplete/filterReqte',
+                minChars:3,
+                showNoSuggestionNotice:true,
+                noSuggestionNotice: 'Nenhum Reqte encontrado!',
+                onSelect: function (suggestion) {
+                    $('#reqteName').val('');
+                    if(arrayLote.indexOf(suggestion.data) != -1){
+                        Swal.fire({
+                                icon: 'error',
+                                title: 'Falha',
+                                text: 'Você não pode adicionar o mesmo processo!',
+                        });
+                    }else{
+                        arrayLote.push(suggestion.data)
+                        $('#loteTable').append(
+                            '<tr class="itemLote">'+
+                                '<th scope="row">'+suggestion.data+'</th>'+
+                                '<td>'+suggestion.value+'</td>'+
+                                '+<td><button class="btn btn-dark removeProcessoLote" data-id="'+suggestion.data+'"><i class="la la-trash"></i></button></td>'+
+                            '</tr>'
+                        )
+
+                    }
+
+                }
+            });
+            $('body').on('click', '.removeProcessoLote', function(e){
+                var element = $(this);
+                var data_id = $(this).attr('data-id');
+                if(arrayLote.pop(data_id)){
+                    element.parent().parent().remove();
+                }
+            });
             $('#filtroTypeValorPrecatorio').change(function(e){
                 if( $(this).val() == '' ){
                     $('.divProcesso').each(function(e){
@@ -1978,15 +2622,15 @@
 
                         dataValorPrecatorio = parseFloat(dataValorPrecatorio);
                         valor = parseFloat(valor);
-                        var idfuncionario = $('#filtroIdFuncionario option:selected').val();
+
                         if(type == 0){
-                            if( dataValorPrecatorio > valor && dataUserId ==  idfuncionario){
+                            if( dataValorPrecatorio > valor){
                                 $(this).show();
                             }else{
                                 $(this).hide();
                             }
                         }else{
-                            if( dataValorPrecatorio <= valor && dataUserId ==  idfuncionario){
+                            if( dataValorPrecatorio <= valor){
                                 $(this).show();
                             }else{
                                 $(this).hide();
@@ -2012,22 +2656,6 @@
                         dataValorPrecatorio = parseFloat(dataValorPrecatorio);
                         valor = parseFloat(valor);
 
-                        var idfuncionario = $('#filtroIdFuncionario option:selected').val();
-                        if(idfuncionario != ''){
-                            if(type == 0){
-                                if( dataValorPrecatorio > valor && dataUserId ==  idfuncionario){
-                                    $(this).show();
-                                }else{
-                                    $(this).hide();
-                                }
-                            }else{
-                                if( dataValorPrecatorio <= valor && dataUserId ==  idfuncionario){
-                                    $(this).show();
-                                }else{
-                                    $(this).hide();
-                                }
-                            }
-                        }else{
                             if(type == 0){
                                 if( dataValorPrecatorio > valor ){
                                     $(this).show();
@@ -2041,8 +2669,6 @@
                                     $(this).hide();
                                 }
                             }
-                        }
-
 
                     })
                 }
@@ -2051,12 +2677,15 @@
             $('#btnFiltrar').click(function(e){
                 var nome = $('input[name=filtroNome]').val();
                 var numero_processo = $('input[name=filtroNumeroProcesso]').val();
+                var filtroIdFuncionario = $('#filtroIdFuncionario option:selected').val();
+                console.log(filtroIdFuncionario);
+                var ordem_cronologica = $('input[name=filtroDataProcesso]').val();
 
                 $('.divProcesso').each(function(e){
                     $(this).show();
                 });
 
-                if(nome == '' && numero_processo == ''){
+                if(nome == '' && numero_processo == ''  && filtroIdFuncionario == '' && ordem_cronologica == ''){
                     $('.divProcesso').each(function(e){
                         $(this).show();
                     });
@@ -2064,10 +2693,17 @@
                 $('.divProcesso').each(function(e){
                     var datanome = $(this).attr('data-nome');
                     var datanp = $(this).attr('data-np');
+                    var user_id = $(this).attr('data-userid');
+                    var od_crono = $(this).attr('data-ordem_cronologica');
 
 
                     if(nome != ''){
                         if (datanome.toLowerCase().indexOf(nome.toLowerCase()) < 0){
+                            $(this).hide();
+                        }
+                    }
+                    if(filtroIdFuncionario != ''){
+                        if (user_id.indexOf(filtroIdFuncionario) < 0){
                             $(this).hide();
                         }
                     }
@@ -2077,7 +2713,55 @@
                             $(this).hide();
                         }
                     }
+
+                    if(ordem_cronologica != ''){
+                        if (od_crono.toLowerCase().indexOf(ordem_cronologica.toLowerCase()) < 0){
+                            $(this).hide();
+                        }
+                    }
                 })
+            });
+            $('#btnEnviarLote').click(function(e){
+                if(arrayLote.length != 0){
+                    var idFuncionario = $('#nomeFuncionario').val();
+                    var agendaid = $('#filtroSubtipoProcessoLote').val();
+                    var situacaoId = $('#situacaoLote').val();
+
+                    $.ajax({
+                        url: '/app/agenda/processos-lote',
+                        method: 'POST',
+                        data: {
+                            'agendaid':agendaid,
+                            'situacaoId': situacaoId,
+                            'idFuncionario': idFuncionario,
+                            'processos': arrayLote
+                        },
+                        success: function(res){
+                            arrayLote = [];
+                            $('.itemLote').remove();
+                            $('#nomeFuncionario').val('');
+                            $('#filtroTipoProcesso').val('');
+                            $('#situacaoLote').val('');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso',
+                                text: res.message,
+                            });
+                        },error: function(err){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Falha',
+                                text: 'Falha ao enviar o pacote',
+                            });
+                        }
+                    });
+                }else{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Falha',
+                        text: 'Você precisa selecionar pelo menos um processo!',
+                    });
+                }
             });
 
             function somaTotais(){
@@ -2104,6 +2788,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox0 = parseFloat(somaBox0);
+                    if(!somaBox0){
+                        somaBox0 = 0;
+                    }
                     somaBox0 = somaBox0 + valor;
                     $('.ss0').html('('+totalBox0+') R$ '+(somaBox0).toLocaleString('pt-BR'));
                 });
@@ -2113,15 +2800,23 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox1 = parseFloat(somaBox1);
+                    if(!somaBox1){
+                        somaBox1 = 0;
+                    }
                     somaBox1 = somaBox1 + valor;
                     $('.ss1').html('('+totalBox1+') R$ '+(somaBox1).toLocaleString('pt-BR'));
                 });
 
                 $('#box2 .card').each(function(e){
                     totalBox2 = totalBox2 + 1;
+
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox2 = parseFloat(somaBox2);
+
+                    if(!somaBox2){
+                        somaBox2 = 0;
+                    }
                     somaBox2 = somaBox2 + valor;
                     $('.ss2').html('('+totalBox2+') R$ '+(somaBox2).toLocaleString('pt-BR'));
                 });
@@ -2131,6 +2826,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox3 = parseFloat(somaBox3);
+                    if(!somaBox3){
+                        somaBox3 = 0;
+                    }
                     somaBox3 = somaBox3 + valor;
                     $('.ss3').html('('+totalBox3+') R$ '+(somaBox3).toLocaleString('pt-BR'));
                 });
@@ -2141,6 +2839,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox5 = parseFloat(somaBox5);
+                    if(!somaBox5){
+                        somaBox5 = 0;
+                    }
                     somaBox5 = somaBox5 + valor;
                     $('.ss5').html('('+totalBox5+') R$ '+(somaBox5).toLocaleString('pt-BR'));
                 });
@@ -2150,6 +2851,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox6 = parseFloat(somaBox6);
+                    if(!somaBox6){
+                        somaBox6 = 0;
+                    }
                     somaBox6 = somaBox6 + valor;
                     $('.ss6').html('('+totalBox6+') R$ '+(somaBox6).toLocaleString('pt-BR'));
                 });
@@ -2159,6 +2863,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox7 = parseFloat(somaBox7);
+                    if(!somaBox7){
+                        somaBox7 = 0;
+                    }
                     somaBox7 = somaBox7 + valor;
                     $('.ss7').html('('+totalBox7+') R$ '+(somaBox7).toLocaleString('pt-BR'));
                 });
@@ -2168,6 +2875,9 @@
                     var valor = $(this).attr('data-valor');
                     valor = parseFloat(valor);
                     somaBox8 = parseFloat(somaBox8);
+                    if(!somaBox8){
+                        somaBox8 = 0;
+                    }
                     somaBox8 = somaBox8 + valor;
                     $('.ss8').html('('+totalBox8+') R$ '+(somaBox8).toLocaleString('pt-BR'));
                 });
@@ -2213,7 +2923,7 @@
         							'novobox': targetList.attr('id')
         						},
         						success: function(res){
-        							
+
         						},error: function(err){
         						},complete: function(){
         						}
@@ -2257,14 +2967,13 @@
             var u_filtroSubtipoProcesso = $('input[name=u_filtroSubtipoProcesso]').val();
             $('#filtroTipoProcesso').change(function(e){
                 tipoAgenda = $(this).val();
-
                 $.ajax({
                     url: '/app/agendas/recuperar-subtipo-ajax/' + tipoAgenda,
                     method: 'GET',
                     success: function(res){
                         if( res.status == 'ok' ){
                             $("#filtroSubtipoProcesso").html('');
-                            $("#filtroSubtipoProcesso").append($("<option />").val('').text('# Todos'));
+                            $("#filtroSubtipoProcesso").append($("<option />").val('').text('Todos'));
 
                             var $dropdown = $("#filtroSubtipoProcesso");
                             $.each(res.response, function() {
@@ -2276,6 +2985,38 @@
                                subtipoAgenda = u_filtroSubtipoProcesso;
 
                                $('#textoAgendaAtual').html( $('#filtroTipoProcesso option:selected').text() + ' - ' + $('#filtroSubtipoProcesso option:selected').text() );
+
+                               u_filtroTipoProcesso = '';
+                               u_filtroSubtipoProcesso = '';
+                            }
+                        }else{
+                            updateNotification('Ocorreu um erro ao recuperar os dados', 'danger', 'danger');
+                        }
+                    },error: function(err){
+
+                    }
+                });
+            });
+            $('#filtroTipoProcessoLote').change(function(e){
+                tipoAgenda = $(this).val();
+                $.ajax({
+                    url: '/app/agendas/recuperar-subtipo-ajax/' + tipoAgenda,
+                    method: 'GET',
+                    success: function(res){
+                        if( res.status == 'ok' ){
+                            $("#filtroSubtipoProcessoLote").html('');
+                            $("#filtroSubtipoProcessoLote").append($("<option />").val('').text('Todos'));
+
+                            var $dropdown = $("#filtroSubtipoProcessoLote");
+                            $.each(res.response, function() {
+                                $dropdown.append($("<option />").val(this.id).text(this.titulo));
+                            });
+
+                            if( u_filtroSubtipoProcesso != '' ){
+                               $("#filtroSubtipoProcesso").val(u_filtroSubtipoProcesso);
+                               subtipoAgenda = u_filtroSubtipoProcesso;
+
+                               $('#textoAgendaAtual').html( $('#filtroTipoProcesso option:selected').text() + ' - ' + $('#filtroSubtipoProcessoLote option:selected').text() );
 
                                u_filtroTipoProcesso = '';
                                u_filtroSubtipoProcesso = '';
@@ -2301,6 +3042,7 @@
 
             $('#btnConfirmarFiltroAgenda').click(function(e){
                 var element = $(this);
+                $('#containerBody').removeAttr('hidden');
                 element.attr('disabled', 'disabled');
                 element.html('Aguarde! Carregandos dados');
 
@@ -2311,8 +3053,8 @@
 
                 $('#modalFiltroTipoAgenda').modal('hide');
             })
-
             function refiltrar(){
+                $('#loadingPagination').removeAttr('hidden')
                 $('#box0').html('');
                 $('#box1').html('');
                 $('#box2').html('');
@@ -2325,16 +3067,318 @@
 
                 $('#textoAgendaAtual').html( $('#filtroTipoProcesso option:selected').text() + ' - ' + $('#filtroSubtipoProcesso option:selected').text() );
 
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/1?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box0').append(str)
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/2?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    console.log(response.data)
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box1').append(str)
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/3?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box2').append(str)
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/4?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box3').append(str)
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/6?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box5').append(str)
+
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/7?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box6').append(str)
+
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/8?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box7').append(str)
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                axios({
+                    method: 'get',
+                    url: '/app/agenda/recupera-processos/9?subtipoAgenda='+subtipoAgenda+'+&tipoAgenda='+tipoAgenda,
+                    responseType: 'stream',
+                    data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+                    })
+                    .then(function (response) {
+                    if(response.data.status == 'ok'){
+                        var str = '';
+                        $.map( response.data.response, function( val, i ) {
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                '<div class="kanban-box">'+
+                                    '<div class="task-board-header">'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+val.nome+'</span>'+
+                                        '</span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+val.valor+'</span>'+
+                                        '</span>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        });
+                        somaTotais();
+                        $('#box8').append(str)
+
+                        $( ".task-board-body" ).each(function( index ) {
+                            $(this).hide('500');
+                            $(this).attr('data-ho', 'close');
+                        });
+                        }
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                })
+                somaTotais();
+                $('#kabanhidden').removeAttr('hidden');
+                $('#loadingPagination').attr('hidden',true);
+
+            }
+            function paginationFilter(){
+                $('#loadingPagination').removeAttr('hidden');
+
+                $('#textoAgendaAtual').html( $('#filtroTipoProcesso option:selected').text() + ' - ' + $('#filtroSubtipoProcesso option:selected').text() );
+
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/1',
+                    url: '/app/agenda/recupera-processos/1?page='+page1,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
 
                             $.map( res.response, function( val, i ) {
 
-                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2354,21 +3398,23 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/2',
+                    url: '/app/agenda/recupera-processos/2?page='+page2,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
 
-                                $('#box1').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box1').append('<div class="card panel  clickEditar divProcesso"  data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
-                                            '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;" >'+
                                                 '<span>'+val.nome+'</span>'+
                                             '</span>'+
                                             '<span class="status-subtitle">'+
@@ -2377,6 +3423,7 @@
                                         '</div>'+
                                     '</div>'+
                                 '</div>');
+
                                 somaTotais();
                             });
 
@@ -2385,17 +3432,19 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/3',
+                    url: '/app/agenda/recupera-processos/3?page='+page3,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2415,17 +3464,19 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/4',
+                    url: '/app/agenda/recupera-processos/4?page='+page4,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2445,19 +3496,21 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
 
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/6',
+                    url: '/app/agenda/recupera-processos/6?page='+page6,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2477,17 +3530,19 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/7',
+                    url: '/app/agenda/recupera-processos/7?page='+page7,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2507,17 +3562,19 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/8',
+                    url: '/app/agenda/recupera-processos/8?page='+page8,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2537,17 +3594,19 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+
                     }
                 });
 
                 $.ajax({
-                    url: '/app/agenda/recupera-processos/9',
+                    url: '/app/agenda/recupera-processos/9?page='+page9,
                     method: 'GET',
+                    async: true,
                     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
+                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -2567,17 +3626,20 @@
                                 $(this).attr('data-ho', 'close');
                             });
                         }
+                        $('#loadingPagination').attr('hidden', true)
+
                     }
                 });
 
             }
-
-
             $('input[name=mnpValorPrincipal]').mask('000.000.000.000.000,00', {reverse: true});
+            $('input[name=mccProposta]').mask('000.000.000.000.000,00', {reverse: true});
             $('input[name=mnpValorJuros]').mask('000.000.000.000.000,00', {reverse: true});
             $('input[name=mnpCpf]').mask('000.000.000-00');
             $('input[name=mnpNumeroProcesso]').mask('0000000-00.0000.0.00.0000');
             $('input[name=mepAdicionarTelefoneText]').mask('(00) 00000-0000');
+            $('input[name=filtroDataTelefone]').mask('(00) 00000-0000');
+            $('input[name=mepAdicionarTelefoneParenteText]').mask('(00) 00000-0000');
 
             $('input[name=mcCessaoSemHonorarios]').mask('000,00%', {reverse: true});
             $('input[name=mcPagamentoCessao]').mask('000,00%', {reverse: true});
@@ -2596,6 +3658,7 @@
                     url: '/app/agenda/cadastrar-novo-processo',
                     method: 'POST',
                     data: {
+                        mnpEntidadeDevedora: $('input[name=mnpEntidadeDevedora]').val(),
                         mnpCabecaAcao: $('input[name=mnpCabecaAcao]').val(),
                         mnpRequerente: $('input[name=mnpRequerente]').val(),
                         mnpCpf: $('input[name=mnpCpf]').val(),
@@ -2603,6 +3666,7 @@
                         mnpOrdemCronologica: $('input[name=mnpOrdemCronologica]').val(),
                         mnpExp: $('input[name=mnpExp]').val(),
                         mnpTipoProcesso: $('select[name=mnpTipoProcesso] option:selected').val(),
+                        mnpSubTipoProcesso: $('select[name=mnpSubTipoProcesso] option:selected').val(),
                         mnpIndiceDataBase: $('input[name=mnpIndiceDataBase]').val(),
                         mnpValorPrincipal: $('input[name=mnpValorPrincipal]').val(),
                         mnpValorJuros: $('input[name=mnpValorJuros]').val(),
@@ -2611,40 +3675,54 @@
                     success: function(res){
 
                         if( res.status == 'ok' ){
+                            $('input[name=mnpEntidadeDevedora]').val('');
                             $('input[name=mnpCabecaAcao]').val('');
                             $('input[name=mnpNumeroProcesso]').val('');
                             $('input[name=mnpValorPrincipal]').val('');
                             $('input[name=mnpValorJuros]').val('');
                             $('#modalNovoProcesso').modal('hide');
 
-                            $('#box0').append('<div class="card panel" data-id="'+res.response.id+'">'+
+                            $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+res.response.valorBruto+'" data-id="'+res.response.id+'" data-nome="'+res.response.nome+'" data-np="'+res.response.numeroProcesso+'" data-userid="'+res.response.userid+'" data-valorprecatorio="'+res.response.valorPrecatorioTotal+'" data-ordem_cronologica="'+res.response.ordem_cronologica+'" style="background-color: #'+res.response.backgroundColor+'; color: #'+res.response.textColor+'">'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+
-                                                res.response.nome+
-                                            '</span>'+
+                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+                                            '<span>'+res.response.nome+'</span>'+
                                         '</span>'+
-                                        '<div class="dropdown kanban-task-action">'+
-                                            '<a href="#" data-id="'+res.response.id+'" class="clickShowHide">'+
-                                                '<i class="fa fa-angle-down"></i>'+
-                                            '</a>'+
-                                        '</div>'+
-                                    '</div>'+
-                                    '<div class="task-board-body" data-id="'+res.response.id+'" data-ho="open">'+
-                                        '<div class="kanban-footer">'+
-                                            '<span class="task-info-cont">'+
-                                                '<span class="task-date"><i class="fa fa-clock-o"></i> R$ '+res.response.valor+'</span>'+
-                                                '<span class="task-priority badge bg-inverse-warning">Venda Avulsa</span>'+
-                                            '</span>'+
-                                        '</div>'+
-                                        '<span class="botaoAcoes">'+
-                                            '<span class="clickEditar" data-id="'+res.response.id+'"><i class="fa fa-edit"></i></span>'+
-                                            '<span class="clickExcluir" data-id="'+res.response.id+'"><i class="fa fa-trash"></i></span>'+
+                                        '<span class="status-subtitle">'+
+                                            '<span>R$ '+res.response.valor+'</span>'+
                                         '</span>'+
                                     '</div>'+
                                 '</div>'+
                             '</div>');
+
+                            // <div class="card panel" data-id="'+res.response.id+'">'+
+                            //     '<div class="kanban-box">'+
+                            //         '<div class="task-board-header">'+
+                            //             '<span class="status-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'+
+                            //                 '<span>'+
+                            //                     res.response.nome+
+                            //                 '</span>'+
+                            //             '</span>'+
+                            //             '<div class="dropdown kanban-task-action">'+
+                            //                 '<a href="#" data-id="'+res.response.id+'" class="clickShowHide">'+
+                            //                     '<i class="fa fa-angle-down"></i>'+
+                            //                 '</a>'+
+                            //             '</div>'+
+                            //         '</div>'+
+                            //         '<div class="task-board-body" data-id="'+res.response.id+'" data-ho="open">'+
+                            //             '<div class="kanban-footer">'+
+                            //                 '<span class="task-info-cont">'+
+                            //                     '<span class="task-date"><i class="fa fa-clock-o"></i>'+res.response.valor+'</span>'+
+                            //                     '<span class="task-priority badge bg-inverse-warning">Venda Avulsa</span>'+
+                            //                 '</span>'+
+                            //             '</div>'+
+                            //             '<span class="botaoAcoes">'+
+                            //                 '<span class="clickEditar" data-id="'+res.response.id+'"><i class="fa fa-edit"></i></span>'+
+                            //                 '<span class="clickExcluir" data-id="'+res.response.id+'"><i class="fa fa-trash"></i></span>'+
+                            //             '</span>'+
+                            //         '</div>'+
+                            //     '</div>'+
+                            // '</div>');
                         }else{
                             if("mnpCabecaAcao" in res.error){
                                 $('input[name=mnpCabecaAcao]').addClass('is-invalid');
@@ -2665,6 +3743,18 @@
                             if("mnpColaborador" in res.error){
                                 $('select[name=mnpColaborador]').addClass('is-invalid');
                                 $('select[name=mnpColaborador]').parent().append('<div class="invalid-feedback">'+res.error.mnpColaborador[0]+'</div>');
+                            }
+                            if("mnpColaborador" in res.error){
+                                $('select[name=mnpColaborador]').addClass('is-invalid');
+                                $('select[name=mnpColaborador]').parent().append('<div class="invalid-feedback">'+res.error.mnpColaborador[0]+'</div>');
+                            }
+                            if("mnpTipoProcesso" in res.error){
+                                $('select[name=mnpTipoProcesso]').addClass('is-invalid');
+                                $('select[name=mnpTipoProcesso]').parent().append('<div class="invalid-feedback">'+res.error.mnpTipoProcesso[0]+'</div>');
+                            }
+                            if("mnpSubTipoProcesso" in res.error){
+                                $('select[name=mnpSubTipoProcesso]').addClass('is-invalid');
+                                $('select[name=mnpSubTipoProcesso]').parent().append('<div class="invalid-feedback">'+res.error.mnpSubTipoProcesso[0]+'</div>');
                             }
                         }
                     },error: function(err){
@@ -2701,248 +3791,256 @@
             $('#divExcluirProcesso').css('padding-bottom', '50px');
             //recupera processos
             //recupera Tipo 0
-            $.ajax({
-                url: '/app/agenda/recupera-processos/1',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/1?page='+page1,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
 
-                        $.map( res.response, function( val, i ) {
-            
-                            $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            //             $.map( res.response, function( val, i ) {
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            //                 $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/2',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box1').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //
+            //         }
+            //     }
+            // });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/2?page='+page2,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box1').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/3',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page2 += 1;
+            //         }
+            //     }
+            // });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/3?page='+page3,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/4',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page3 += 1;
+            //         }
+            //     }
+            // });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/4?page='+page4,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
+
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page4 += 1;
+            //         }
+            //     }
+            // });
 
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/6',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/6?page='+page6,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page6 += 1;
+            //         }
+            //     }
+            // });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/7',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/7?page='+page7,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page7 += 1;
+            //         }
+            //     }
+            // });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/8',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/8?page='+page8,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page8 += 1;
+            //         }
+            //     }
+            // });
 
-            $.ajax({
-                url: '/app/agenda/recupera-processos/9',
-                method: 'GET',
-                data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
-                success: function(res){
-                    if(res.status == 'ok'){
-                        $.map( res.response, function( val, i ) {
-                            $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'">'+
-                                '<div class="kanban-box">'+
-                                    '<div class="task-board-header">'+
-                                        '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
-                                            '<span>'+val.nome+'</span>'+
-                                        '</span>'+
-                                        '<span class="status-subtitle">'+
-                                            '<span>R$ '+val.valor+'</span>'+
-                                        '</span>'+
-                                    '</div>'+
-                                '</div>'+
-                            '</div>');
-                            somaTotais();
-                        });
+            // $.ajax({
+            //     url: '/app/agenda/recupera-processos/9?page='+page9,
+            //     method: 'GET',
+            //     data: { subtipoAgenda: subtipoAgenda, tipoAgenda: tipoAgenda },
+            //     success: function(res){
+            //         if(res.status == 'ok'){
+            //             $.map( res.response, function( val, i ) {
+            //                 $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+            //                     '<div class="kanban-box">'+
+            //                         '<div class="task-board-header">'+
+            //                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
+            //                                 '<span>'+val.nome+'</span>'+
+            //                             '</span>'+
+            //                             '<span class="status-subtitle">'+
+            //                                 '<span>R$ '+val.valor+'</span>'+
+            //                             '</span>'+
+            //                         '</div>'+
+            //                     '</div>'+
+            //                 '</div>');
+            //                 somaTotais();
+            //             });
 
-                        $( ".task-board-body" ).each(function( index ) {
-                            $(this).hide('500');
-                            $(this).attr('data-ho', 'close');
-                        });
-                    }
-                }
-            });
+            //             $( ".task-board-body" ).each(function( index ) {
+            //                 $(this).hide('500');
+            //                 $(this).attr('data-ho', 'close');
+            //             });
+            //             page9 += 1;
+            //         }
+            //     }
+            // });
 
             $('body').on('click', '.clickShowHide', function(e){
                 var id = $(this).attr('data-id');
@@ -2956,10 +4054,12 @@
 
                 var id = $('#mepIdProcesso').val();
                 var mepCabecaAcao = $('#mepCabecaAcao').val();
+				var mepEntDevedora = $('#mepEntDevedora').val();
                 var mepNomeCliente = $('#mepRequerente').val();
                 var mepCpfCliente = $('#mepCpf').val();
                 var mepCampoNumeroProcesso = $('#mepNumeroProcesso').val();
                 var mepOrdemCronologica = $('#mepOrdemCronologica').val();
+                var mepDataNascimento = $('#mepDataNascimento').val();
                 var mepEp = $('#mepExp').val();
                 var mepSituacao = $('#mepSituacao option:selected').val();
                 var mepDataBase = $('#mepIndiceDataBase').val();
@@ -2973,10 +4073,12 @@
                     data: {
                         id: id,
                         mepCabecaAcao: mepCabecaAcao,
+						mepEntDevedora: mepEntDevedora,
                         mepNomeCliente: mepNomeCliente,
                         mepCpfCliente: mepCpfCliente,
                         mepCampoNumeroProcesso: mepCampoNumeroProcesso,
                         mepOrdemCronologica: mepOrdemCronologica,
+                        mepDataNascimento: mepDataNascimento,
                         mepEp: mepEp,
                         mepSituacao: mepSituacao,
                         mepDataBase: mepDataBase,
@@ -3002,6 +4104,10 @@
                                 $('input[name=mepCabecaAcao]').addClass('is-invalid');
                                 $('input[name=mepCabecaAcao]').parent().append('<div class="invalid-feedback">'+res.error.mepCabecaAcao[0]+'</div>');
                             }
+							if("mepEntDevedora" in res.error){
+                                $('input[name=mepEntDevedora]').addClass('is-invalid');
+                                $('input[name=mepEntDevedora]').parent().append('<div class="invalid-feedback">'+res.error.mepEntDevedora[0]+'</div>');
+                            }
                             if("mepCampoNumeroProcesso" in res.error){
                                 $('input[name=mepNumeroProcesso]').addClass('is-invalid');
                                 $('input[name=mepNumeroProcesso]').parent().append('<div class="invalid-feedback">'+res.error.mepCampoNumeroProcesso[0]+'</div>');
@@ -3020,7 +4126,7 @@
                             }
                         }
                     },error: function(err){
-                        
+
                     },complete: function(){
                         element.removeAttr('disabled');
                         element.html('Salvar Edição');
@@ -3036,6 +4142,7 @@
                 $('#modalEditarProcesso').modal('show');
                 $('.chats').html('');
                 $('#tbodyTelefones').html('');
+                $('#tbodyTelefonesParente').html('');
                 $('#tbodyEmails').html('');
                 $('#bodyArquivosEnviados').html('');
 
@@ -3044,17 +4151,22 @@
                     url: '/app/agenda/recupera-dados-e-comentarios/' + id,
                     method: 'GET',
                     success: function(result){
-                        
-
                         $('#mepDataUltimaAbertura').html( 'Ultima Abertura: ' + result.data_ultima_abertura );
                         $('#mepIdProcesso').val( result.id );
                         $('#mepIdProcesso2').val( result.id );
+                        $('#mccidProcessoCarta').val( result.id );
+                        $('#mccidProcessoChangeAgenda').val( result.id );
+                        $('select[name=tipoProcessoDisable] option[value='+result.idTipo+']').attr('selected','selected');
+                        getSubAgenda();
+                        $('.type-change-agenda-disabled').attr('disabled', 'disabled' ),
                         $('#mepNumeroProcesso').html( result.processo_de_origem );
                         $('#mepCabecaAcao').val( result.cabeca_de_acao );
+						$('#mepEntDevedora').val(result.entidade_devedora );
                         $('#mepRequerente').val( result.reqte );
                         $('#mepCpf').val( result.cpf );
+                        $('#score').html( 'SC: '+result.score );
                         $('#mepNumeroProcesso').val( result.processo_de_origem );
-
+                        $('#mepDataNascimento').val(result.data_nascimento);
                         var Splitproccess = result.processo_de_origem.trim().split('/');
                         var numero_processo = Splitproccess[0].split('.8.26.');
                         var proccessSP = Splitproccess[0].split('.');
@@ -3068,11 +4180,14 @@
                         $('#mepValorPrincipal').val( result.principal_bruto_format );
                         $('#mepValorJuros').val( result.juros_moratorio_format );
                         $('#mepFuncionario').val( result.user_id );
+                        $('.clickRemoverAgenda').attr('data-id', result.id);
 
                         $.map( result.arrayNotificacoes, function(res, i){
                             $('#mac_tbody').append('<tr><td>'+res.data_agendamento+'</td><td>'+res.comentario+'</td><td><a href="#!" class="btn btn-outline-danger btn-sm mac_excluir_item" data-id="'+res.id+'"><i class="fa fa-trash"></i>&nbsp;Excluir </a></td></tr>')
                         } )
-
+                        $.map( result.cedentes, function(res, i){
+                            $('#tbodyCedentesCadastros').prepend('<tr><td>'+res.nome+'</td><td>'+res.cpf+'</td><td>'+res.rg+'</td><td>'+res.localizacao+'</td><td><button type="button" class="btn btn-danger clickExcluirCedente" data-id="'+res.id+'"><i class="fa fa-trash"></i></button></td></tr>');
+                        } )
                         /*Arquivos */
                         $.map( result.arrayDocumentos, function(val, i){
                             $('#bodyArquivosEnviados').append('<div class="col-6 col-sm-4 col-md-3 col-lg-4 col-xl-3">'+
@@ -3150,11 +4265,43 @@
                                         '</a>'+
                                         '<div class="dropdown-menu dropdown-menu-right">'+
                                             '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
-                                            '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(val.telefone)+'" target="_blank" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
                                         '</div>'+
                                     '</div>'+
                                 '</td>'+
                             '</tr>');
+
+                        });
+
+                        $.map( result.arrayTelefonesParente, function(val,i) {
+                            var returnStatus = '';
+
+                            if(val.returnStatus == 'em consulta'){
+                                returnStatus = '<span class="badge badge-warning">'+val.returnStatus+'</span>';
+                            }else if(val.returnStatus == 'atendida' ){
+                                returnStatus = '<span class="badge badge-success">'+val.returnStatus+'</span>';
+                            }else if( val.returnStatus == 'sem resposta' ||  val.returnStatus == 'desconhecido'){
+                                returnStatus = '<span class="badge badge-danger">'+val.returnStatus+'</span>';
+                            }else{
+                                returnStatus = '<span class="badge badge-info">'+val.returnStatus+'</span>';
+                            }
+
+                            $('#tbodyTelefonesParente').append('<tr>'+
+                                '<td>'+val.telefone+'</td>'+
+                                '<td>'+returnStatus+'</td>'+
+                                '<td class="text-right">'+
+                                    '<div class="dropdown dropdown-action">'+
+                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
+                                            '<i class="material-icons">more_vert</i>'+
+                                        '</a>'+
+                                        '<div class="dropdown-menu dropdown-menu-right">'+
+                                            '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(val.telefone)+'" target="_blank" data-id="'+val.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</td>'+
+                            '</tr>');
+
                         });
                     },error: function(err){
                     },complete: function(){
@@ -3166,7 +4313,7 @@
                     url: '/app/agenda/recupera-dados-processo/' + id,
                     method: 'GET',
                     success: function(result){
-
+                        console.log(result)
                         $('#mcAutor').html( result.cabeca_de_acao );
                         $('#mcCedente').html( result.reqte );
                         $('#mcNumeroProcesso').html( result.processo_de_origem );
@@ -3179,8 +4326,9 @@
                         $('#mcResultado2').html( result.inicio_correcao_taxa );
                         $('#mcDias').val( result.dias_juros );
                         $('#mcResultado3').html(result.diffDias);
-                        $('#mcDataVencimento').val(result.dataVencimento);
-                        $('#mcDataEmissaoPrecatorio').val(result.dataEmissaoPrecatorios);
+                        $('#mcDataVencimento').val('540 dias');
+                        $('#mepDataNascimento').val(result.data_nascimento);
+                        $('#mcDataEmissaoPrecatorio').val('540 dias');
 
                         if(result.desconto17 == 1){
                             $('#desconto17').prop('checked', true);
@@ -3254,7 +4402,7 @@
                         id: id
                     },
                     success: function(result){
-                        
+
 
                         if(result.status == 'ok'){
                             $('#mcResultado1').html(result.taxaBase);
@@ -3297,7 +4445,74 @@
                     }
                 });
             });
+            $('#btnAlterarAgenda').click(function(e){
+                var element = $(this);
+                element.attr('disabled', 'disabled');
+                $.ajax({
+                    url: '/app/agenda/alterar',
+                    method: 'POST',
+                    data: {
+                        tipoProcesso: $('select[name=tipoProcesso]').val(),
+                        subTipoProcesso: $('#subTipoProcesso').val(),
+                        mccidProcessoChangeAgenda: $('#mccidProcessoChangeAgenda').val()
+                    },success: function(res){
+                            Swal.fire({
+                            icon: 'success',
+                            title: 'Cadastrado com sucesso',
+                            text: 'Agenda alterada com sucesso',
+                        });
+                    },error: function(err){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao altera a sua agenda. Atualize a página e tente novamente',
+                        });
+                    },complete: function(){
+                        element.removeAttr('disabled');
+                    }
+                });
+                $(this).removeAttr("disabled");
+            });
+            $('#mensagemChat').on('keypress', function (e) {
+                if(e.which === 13){
+                    //Disable textbox to prevent multiple submit
+                    $(this).attr("disabled", "disabled");
 
+                    var element = $(this);
+                    element.attr('disabled', 'disabled');
+
+                    $.ajax({
+                        url: '/app/agenda/enviar-chat',
+                        method: 'POST',
+                        data: {
+                            idprocesso: $('#mepIdProcesso').val(),
+                            mensagem: $('#mensagemChat').val()
+                        },success: function(res){
+                            if(res.status == 'ok'){
+                                $('#mensagemChat').val('');
+                                $('.chats').prepend('<div class="chat chat-left">'+
+                                    '<div class="chat-body">'+
+                                        '<div class="chat-bubble">'+
+                                            '<div class="chat-content">'+
+                                                '<h5>'+res.response.name+'</h5>'+
+                                                '<p>'+res.response.mensagem+'</p>'+
+                                                '<span class="chat-time">'+res.response.dataEnvio+'</span>'+
+                                            '</div>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>');
+                            }else{
+
+                            }
+                        },error: function(err){
+
+                        },complete: function(){
+                            element.removeAttr('disabled');
+                        }
+                    });
+                    $(this).removeAttr("disabled");
+                }
+            })
             $('#btnEnviarChat').click(function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');
@@ -3402,6 +4617,7 @@
                     method: 'POST',
                     data: {
                         idprocesso: $('#mepIdProcesso').val(),
+                        isParente: 0,
                         telefone: telefone
                     },success: function(res){
                         if(res.status == 'ok'){
@@ -3417,7 +4633,7 @@
                                         '</a>'+
                                         '<div class="dropdown-menu dropdown-menu-right">'+
                                             '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+res.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
-                                            '<a class="dropdown-item clickAbrirWhatsapp" href="#" data-id="'+res.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(res.telefone)+'" target="_blank" data-id="'+res.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
                                         '</div>'+
                                     '</div>'+
                                 '</td>'+
@@ -3442,7 +4658,71 @@
                     }
                 });
             });
+            $('#clickAddTelefoneParente').click(function(e){
+                var element = $(this);
+                element.attr('disabled', 'disabled');
+                element.hide();
 
+                var telefone = $('input[name=mepAdicionarTelefoneParenteText]').val();
+
+                if(telefone.length < 14){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Telefone inválido',
+                        text: 'Digite corretamente o numero do telefone',
+                    });
+
+                    element.removeAttr('disabled');
+                    element.show();
+                    return false;
+                }
+                localStorage.setItem('validaNumero', moment().format());
+                $.ajax({
+                    url: '/app/agenda/salvar-telefone',
+                    method: 'POST',
+                    data: {
+                        idprocesso: $('#mepIdProcesso').val(),
+                        telefone: telefone,
+                        isParente: 1,
+                    },success: function(res){
+                        if(res.status == 'ok'){
+                            $('input[name=mepAdicionarTelefoneParenteText]').val('');
+
+                            $('#tbodyTelefonesParente').append('<tr>'+
+                                '<td>'+res.telefone+'</td>'+
+                                '<td><span class="badge badge-primary">Em Consulta</span></td>'+
+                                '<td class="text-right">'+
+                                    '<div class="dropdown dropdown-action">'+
+                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
+                                            '<i class="material-icons">more_vert</i>'+
+                                        '</a>'+
+                                        '<div class="dropdown-menu dropdown-menu-right">'+
+                                            '<a class="dropdown-item clickExcluirTelefone" href="#" data-id="'+res.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
+                                            '<a class="dropdown-item clickAbrirWhatsapp" href="https://api.whatsapp.com/send?phone=55'+encodeURIComponent(res.telefone)+'" target="_blank" data-id="'+res.id+'"><i class="fa fa-whatsapp m-r-5"></i> Whatsapp Web</a>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</td>'+
+                            '</tr>');
+                        }else{
+                            $('input[name=mepAdicionarTelefoneParenteText]').val('');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: res.mensagem
+                            });
+                        }
+                    },error: function(err){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Ocorreu um erro ao cadastrar o telefone. Atualize a página e tente novamente',
+                        });
+                    },complete: function(){
+                        element.removeAttr('disabled');
+                        element.show();
+                    }
+                });
+            });
             $('#clickAddEmail').click(function(e){
                 var element = $(this);
                 element.attr('disabled', 'disabled');

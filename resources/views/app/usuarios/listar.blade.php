@@ -154,6 +154,10 @@
             $('.clickEditar').click(function(e){
                 window.location.href = '/app/usuarios/editar/' + $(this).attr('data-id');
             });
+
+            $('.clickAlterarSenha').click(function(e){
+                window.location.href = '/app/usuarios/alterar-senha/' + $(this).attr('data-id');
+            });
             $('.clickExcluir').click(function(e){
                 var id = $(this).attr('data-id');
 

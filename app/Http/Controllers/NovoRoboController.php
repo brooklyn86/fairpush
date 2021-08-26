@@ -18,6 +18,7 @@ use App\Chat;
 use App\Telefones;
 use App\Emails;
 use App\Taxa;
+use App\Date;
 use App\ArquivosProcesso;
 use App\TipoAgenda;
 use App\SubtipoAgenda;
@@ -37,15 +38,84 @@ use Ilovepdf\SplitTask;
 use Ilovepdf\ExtractTask;
 
 class NovoRoboController extends Controller{
+
+
     public function viewExtrairCadernos(){
-        $sql = RoboCadernos::select('*', DB::raw("date_format(data, '%d/%m/%Y') as data_format"))->orderBy('data', 'asc')->get();
+        $sql = RoboCadernos::select('*', DB::raw("date_format(data, '%d/%m/%Y') as data_format"))->orderBy('data', 'asc')->where('isExpedido','!=',1)->paginate(10);
+
+        return view('app.robo.extrair_cadernos', compact('sql'));
+    }
+    public function viewExtrairCadernosExpedir(){
+        $sql = RoboCadernos::select('*', DB::raw("date_format(data, '%d/%m/%Y') as data_format"))->where('isExpedido',1)->orderBy('data', 'asc')->paginate(10);
 
         $data = [
             'sql' => $sql
         ];
 
-        return view('app.robo.extrair_cadernos', $data);
+        return view('app.robo.extrair_caderno_antes', $data);
     }
+    public function viewExtrairAntigoCadernos(){
+        $sql = Date::select('*', DB::raw("date_format(data, '%d/%m/%Y') as data_format"))->orderBy('data', 'asc')->get();
+
+        $data = [
+            'sql' => $sql
+        ];
+
+        return view('app.robo.caderno_antigo', $data);
+    }
+    public function getData(Request $request){
+
+        $hasDate = RoboCadernos::where('data',$request->data)->where('isExpedido', 1)->first();
+        if($hasDate)
+            return Response()->json($hasDate);
+        return Response()->json([]);
+
+    }
+
+    public function createData(Request $request){
+        $hasDate = RoboCadernos::where('data',$request->date)->first();
+        if(!$hasDate){
+            $date = new RoboCadernos;
+            $date->data = $request->date;
+            $date->data_br = $request->oldData;
+            $date->isExpedido = 1;
+            $date->save();
+            return Response()->json($date);
+
+        }
+        return Response()->json($hasDate);
+
+    }
+
+    public function isError(Request $request){
+        $hasProcesso = RoboExtracaoDetalhes::where('processo_de_origem',$request->processo)->first();
+        if($hasProcesso){
+            $hasProcesso->isError = 1;
+            $hasProcesso->save();
+            return Response()->json(['message' => 'Atualizado com sucesso', 'processo' => $hasProcesso]);
+
+        }
+        return Response()->json(['message' => 'Error ao atualizar com sucesso']);
+
+    }
+    public function createProcesso(Request $request){
+
+        $hasProcesso = RoboExtracaoDetalhes::where('processo_de_origem',$request->processo)->first();
+        if(!$hasProcesso){
+            $processo = new RoboExtracaoDetalhes;
+            $processo->processo_de_origem = $request->processo;
+            $processo->campo2 = $request->data_id;
+            $processo->save();
+            return Response()->json($processo);
+        }else{
+            $hasProcesso->campo2 = $request->data_id;
+            $hasProcesso->save();
+        }
+        return Response()->json($hasProcesso);
+
+    }
+
+
     public function postExtrairCadernos(Request $request){
         $input = $request->all();
 
@@ -124,9 +194,51 @@ class NovoRoboController extends Controller{
 
         return back()->with('sucesso', 'Disparo efetuado com sucesso');
     }
+    public function viewCrawlerCadernoAntes($id){
+        $sql = RoboExtracaoDetalhes::where('campo2', $id)->where('passou_robo',1)->paginate(10);
+        $tiposAgenda = TipoAgenda::all();
+        $arrayTiposAgenda = [];
 
+        if(count($tiposAgenda) > 0){ foreach($tiposAgenda as $dados){ $arrayTiposAgenda[$dados->id] = $dados->tipoAgenda; } }
+
+        $data = [
+            'arrayTiposAgenda' => $arrayTiposAgenda
+        ];
+
+        return view('app.robo.antes_expedir',compact('sql'),$data);
+    }
+    public function viewCrawlerCadernoFederais(){
+        $sql = Processos::where('isFederal',1)->where('isBot',1)->paginate(10);
+        $tiposAgenda = TipoAgenda::all();
+        $arrayTiposAgenda = [];
+
+        if(count($tiposAgenda) > 0){ foreach($tiposAgenda as $dados){ $arrayTiposAgenda[$dados->id] = $dados->tipoAgenda; } }
+
+        $data = [
+            'arrayTiposAgenda' => $arrayTiposAgenda
+        ];
+
+        return view('app.robo.federais',compact('sql'),$data);
+    }
     public function viewCrawlerCaderno($id){
-        $sql = RoboExtracaoDetalhes::where('campo2', $id)->get();
+        $sql = RoboExtracaoDetalhes::where('campo2', $id);
+        $total = $sql->count();
+        $sql = $sql->paginate(10);
+        $tiposAgenda = TipoAgenda::all();
+        $arrayTiposAgenda = [];
+
+        if(count($tiposAgenda) > 0){ foreach($tiposAgenda as $dados){ $arrayTiposAgenda[$dados->id] = $dados->tipoAgenda; } }
+
+        $data = [
+            'sql' => $sql,
+            'total' => $total,
+            'arrayTiposAgenda' => $arrayTiposAgenda
+        ];
+
+        return view('app.robo.crawler_cadernos', $data);
+    }
+    public function viewCrawlerCadernoAntigo($id){
+        $sql = Processos::where('data_id', $id)->get();
         $tiposAgenda = TipoAgenda::all();
         $arrayTiposAgenda = [];
 
@@ -137,9 +249,240 @@ class NovoRoboController extends Controller{
             'arrayTiposAgenda' => $arrayTiposAgenda
         ];
 
-        return view('app.robo.crawler_cadernos', $data);
+        return view('app.robo.crawler_cadernos_antigo', $data);
+    }
+    public function viewCadernoProcessoAvulso(){
+        $sql = Processos::where('isAvulso', Processos::isAvulso)->get();
+
+        $tiposAgenda = TipoAgenda::all();
+        $arrayTiposAgenda = [];
+
+        if(count($tiposAgenda) > 0){ foreach($tiposAgenda as $dados){ $arrayTiposAgenda[$dados->id] = $dados->tipoAgenda; } }
+
+        $data = [
+            'sql' => $sql,
+            'arrayTiposAgenda' => $arrayTiposAgenda
+        ];
+
+        return view('app.robo.processo_avulso', $data);
     }
 
+    public function upload(Request $request){
+        // Define o valor default para a variável que contém o nome da imagem 
+    $nameFile = null;
+
+    // Verifica se informou o arquivo e se é válido
+    if ($request->hasFile('file') && $request->file('file')->isValid()) {
+        
+        // Define um aleatório para o arquivo baseado no timestamps atual
+        // $name = uniqid(date('HisYmd'));
+
+        // Recupera a extensão do arquivo
+        // $extension = $request->file->extension();
+        $nameFile = $request->file->getClientOriginalName();
+
+        // // Define finalmente o nome
+        // $nameFile = "{$name}.{$extension}";
+
+        // Faz o upload:
+        $upload = $request->file->storeAs('/public/pdfs/',$nameFile);
+        // Se tiver funcionado o arquivo foi armazenado em storage/app/public/categories/nomedinamicoarquivo.extensao
+
+        // Verifica se NÃO deu certo o upload (Redireciona de volta)
+        if ( !$upload )
+            return Response()->json(['error' => true, 'message' => 'Falha ao fazer upload'],500);
+        return Response()->json(['error' => false, 'message' => 'Upload com sucesso']);
+
+    }
+}
+
+public function store(Request $request)
+    {
+        $parser = new \Smalot\PdfParser\Parser();
+        $file = base_path('/storage/app/public/pdfs/'.$request->processo.'.pdf');
+        $pdf = $parser->parseFile($file);
+        $processo = new Processos;
+        $nome = 0;
+        $cpf = 0;
+        $valor_principal = 0;
+        $valor_juro = 0;
+        $valor_req = 0;
+        $processoV = 0;
+        $contratuais = 0;
+        $nomeReu = 0;
+        $criado = 0;
+        $data_conta = 0;
+        $assunto_cjf = 0;
+        $processoAnterior = [];
+        $linhas = explode("\n", $pdf->getText());
+        $nome_reu = "";
+        $segundo_cpf = "";
+        $processo->processo_de_origem = $request->processo;
+        $processo->isFederal = 1;
+        $processo->isBot = 1;
+        $processo->data_id = -1;
+        $processo->save();
+        $totalLinhas = count($linhas);
+        foreach($linhas as $linha){
+            
+            if(preg_match('/Data de Nascimento/', $linha) ){
+                $explode = explode(' ', $linha);
+                $data = (isset($explode[3]) ? trim($explode[3])  : "");
+                $data = explode('/',$data);
+                $data = \Carbon\Carbon::createFromDate($data[2].'-'.$data[1].'-'.$data[0])->toDateString();
+                $processo->data_nascimento = $data;
+                $processo->save();
+            }
+            if(preg_match('/Processo Anterior nº/', $linha) ){
+                array_push($processoAnterior, $linha);
+            }
+            $explode = explode(':', $linha);
+            if($processoV == 0){
+                if($explode[0] == "Processo"){
+                    $processoV =1;
+                    $numero = explode(" ",$explode[1]);
+                    $processo->processo_de_origem = (isset($numero[2]) ? trim($numero[2]) : trim($numero[1] ) );
+                    
+                }
+            }
+            if(preg_match('/Data do Protocolo/', $linha) ){
+                $data = (isset($explode[1]) ? trim($explode[1])  : "");
+                $data = explode('/',$data);
+                $data = \Carbon\Carbon::createFromDate($data[2].'-'.$data[1].'-'.$data[0])->toDateString();
+                $processo->data_protocolo = $data;
+                $processo->save();
+            }
+            // if($explode[0] == "Nome da Vara"){
+            //     array_push($processoAnterior, $explode[1]);
+
+            // }
+            // if($explode[0] == "Data Protocolo"){
+            //     array_push($processoAnterior, $explode[1]);
+
+            // }
+            if($assunto_cjf == 0){
+                if($explode[0] == "Assunto CJF"){
+                    $processo->assunto_cjf =  trim($explode[1]);
+                    $processo->save();
+                    $assunto_cjf++;
+                }
+            }
+            if($data_conta == 0){
+                if($explode[0] == "Data da Conta"){
+
+                    $data = (isset($explode[1]) ? trim($explode[1])  : "");
+                
+                    $data = explode('/',$data);
+                    $data = \Carbon\Carbon::createFromDate($data[2].'-'.$data[1].'-'.$data[0])->toDateString();
+                    $processo->data_conta = $data;
+                    $processo->save();
+                    $data_conta++;
+                }
+            }
+            if($contratuais == 0) {
+                if(preg_match('/Contratuais/', $linha) ){
+                    $processo->contratuais =  1;
+                    $processo->save();
+                    $contratuais = 1;
+                }
+            }
+
+            if($nome == 0){
+                if($explode[0] == "Nome"){
+                    $processo->cabeca_de_acao = (isset($explode[1]) ? trim($explode[1])  : "");
+                    $processo->save();
+                }
+            }
+            if($explode[0] == "Réu\t"){
+                $nome = 1;
+            }
+            if($cpf == 0){ 
+                if(preg_match('/CPF/', $linha)){
+                    $processo->cpf = (isset($explode[1]) ? trim($explode[1])  : "");
+                    $processo->save();
+                    $cpf=1;
+                }
+            }
+            // if($cpf == 1){ 
+            //     if(preg_match('/CPF/', $linha)){
+            //         if($processo->cpf != trim($explode[1])){
+            //             $campo = new CampoProcesso;
+            //             $processo->processo_id = $processo->id;
+            //             $processo->key = 'text';
+            //             $processo->name = 'Segundo CPF';
+            //             $processo->value = (isset($explode[1]) ? trim($explode[1])  : "");
+            //             $processo->order = ;
+
+            //             $processo->save();
+            //             $cpf=2;
+            //         }
+            //     }
+            // }
+            if($nome > 0 && $nomeReu != 1){
+                if($explode[0] == "Nome"){
+                    $processo->nome_reu = (isset($explode[1]) ? trim($explode[1])  : "");
+                    $processo->save();
+				  $nome++;
+				  $nomeReu = 1;
+                }
+            }
+  
+            if($valor_principal < 2){
+                if($explode[0] == "Valor Principal"){
+                    if($valor_principal == 1){
+                        $processo->	principal_bruto = (isset($explode[1]) ? trim($explode[1])  : "");
+                        $processo->save();
+                    }
+                    $valor_principal++;                    
+                }
+            }
+       
+            if($valor_juro < 2){
+                if($explode[0] == "Valor Juros"){
+                    if($valor_juro == 1){
+                        $processo->juros_moratorio = (isset($explode[1]) ? trim($explode[1])  : "");
+                        $processo->order = 6;
+
+                        $processo->save();
+                        
+                    }
+                    $valor_juro++;
+
+                }
+            }
+            if($valor_req == 0){
+                if($explode[0] == "Valor Total do Requerente"){
+                    $processo->valor_reqte = (isset($explode[1]) ? trim($explode[1])  : "");
+                    $processo->save();
+                    $valor_req = 1;
+                }
+            }
+            if($explode[0] == "Número de Meses (Exerc. Anteriores)"){
+                $valor_req = 1;
+                $meses = explode('D', $explode[1]);
+                $processo->numero_meses = (isset($meses[0]) ? trim($meses[0])  : "");
+
+                $processo->save();
+                
+            }
+            if($criado == 0){
+                if(preg_match('/Criado em/', $linha)){
+                    $nlinha = explode(' ', $linha);
+                    $processo->criado = 'Criado em:' .$nlinha[5].' '.$nlinha[6];
+                    $processo->save();
+                    $criado++;
+                }
+            }
+        }
+        dd($i);
+        // $processo->processos_anteriores = json_encode($processoAnterior);
+        $processo->nome_reu = $nome_reu;
+        // $processo->segundo_cpf = $segundo_cpf;
+      
+        $processo->save();
+
+        return Response()->json($processo);
+    }
     public function iniciarLeituraCaderno($id){
         $sql = RoboCadernos::where('id', $id)->get();
 
@@ -277,7 +620,7 @@ class NovoRoboController extends Controller{
     }
 
     public function getProcessosForPython(){
-        $processos = RoboExtracaoDetalhes::where('passou_robo', 0)->paginate(10000);
+        $processos = RoboExtracaoDetalhes::where('passou_robo', 0)->where('is_type', 0)->where('isError',0)->paginate(10000);
 
         return response()->json($processos);
     }
@@ -532,6 +875,9 @@ class NovoRoboController extends Controller{
 
             $processos = RoboExtracaoDetalhes::find($request->id);
             $processos->passou_robo = 1;
+            if(isset($request->type) && $request->type = 1){
+                $processos->is_type = 1;
+            }
             $processos->save();
 
             return response()->json($processos);
@@ -542,6 +888,12 @@ class NovoRoboController extends Controller{
 
     public function iniciaCrawler($id){
         $sql = RoboCadernos::where('id', $id)->get();
+        $valida = RoboCadernos::where('is_crawled', 1)->get();
+
+        foreach($valida as $caderno){
+            $caderno->is_crawled = 0;
+            $caderno->save();
+        }
 
         if(count($sql) < 1){
             return back()->with('erro', 'Extração não encontrada. Tente novamente');
@@ -565,8 +917,9 @@ class NovoRoboController extends Controller{
 
         //$output = shell_exec('python3 robo_python.py 2>&1');
 
-        shell_exec('python3 robo_python.py 2>/dev/null >/dev/null &');
+        // shell_exec('python3 robo_python.py 2>/dev/null >/dev/null &');
         $sql[0]->status_python = 1;
+        $sql[0]->is_crawled = 1;
         $sql[0]->save();
 
         return back()->with('sucesso', 'O crawler esta trabalhando e atualizando os dados do processo');
@@ -587,6 +940,13 @@ class NovoRoboController extends Controller{
         return back()->with('sucesso', 'O crawler esta trabalhando e atualizando os dados do processo');*/
     }
 
+    public function getDadosRobo(){
+        $caderno = RoboCadernos::where('is_crawled', 1)->first();
+
+        $dados = RoboExtracaoDetalhes::where('campo2',$caderno->id)->where('passou_robo',0)->get();
+
+        return Response()->json($dados);
+    }
     public function viewEnviarAgenda(Request $request, $id){
         $sql = RoboExtracaoDetalhes::find($id);
 
@@ -600,7 +960,7 @@ class NovoRoboController extends Controller{
             $processo = new Processos;
             $processo->cabeca_de_acao = $sql->campo5;
             $processo->cpProcesso = '';
-            $proceoss->ordem_cronologica = '';
+            $processo->ordem_cronologica = '';
             $processo->exp = '';
             $processo->processo_de_origem = '';
             $processo->vara = '';
@@ -619,9 +979,46 @@ class NovoRoboController extends Controller{
 
         }
     }
+    public function viewRemoveAgenda(Request $request, $id){
+        $sql = Processos::find($id);
 
-    public function viewPreviaAgenda($id){
+        if($sql == null){ return  response()->json([
+            'status' => 'error',
+            'response' => false
+        ]);}
+        try{
+            $response = Agenda::where('processo_id', $id)->delete();
+        }catch(\Exception $e){
+
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'response' => $sql
+        ]);
+    }
+    public function viewPreviaAgendaAntes($id){
         $sql = RoboExtracaoDetalhes::find($id);
+
+        if($sql == null){
+            return response()->json([
+                'status' => 'erro'
+            ]);
+        }
+
+        $sql->requisitado = number_format($sql->requisitado,2,',','.');
+        $sql->principal_bruto = number_format($sql->principal_bruto,2,',','.');
+        $sql->total_condenacao = number_format($sql->total_condenacao,2,',','.');
+        $sql->juros_moratorio = number_format($sql->juros_moratorio,2,',','.');
+
+        return response()->json([
+            'status' => 'ok',
+            'response' => $sql
+        ]);
+    }
+
+    public function viewPreviaAgendaFederais($id){
+        $sql = Processos::find($id);
 
         if($sql == null){
             return response()->json([
@@ -642,7 +1039,53 @@ class NovoRoboController extends Controller{
     public function postPreviaAgenda(Request $request){
 
     }
+    public function postEnviarAgendaAntes(Request $request){
+        $input = $request->all();
 
+        $sql = RoboExtracaoDetalhes::find($input['hidden_id']);
+
+        if($sql == null){ return back()->with('erro', 'Item não encontrado'); }
+
+        $input['total_condenacao'] = str_replace('.', '', $input['total_condenacao']);
+        $input['total_condenacao'] = str_replace(',', '.', $input['total_condenacao']);
+
+        $input['requisitado'] = str_replace('.', '', $input['requisitado']);
+        $input['requisitado'] = str_replace(',', '.', $input['requisitado']);
+
+        $input['principal_bruto'] = str_replace('.', '', $input['principal_bruto']);
+        $input['principal_bruto'] = str_replace(',', '.', $input['principal_bruto']);
+
+        $input['juros_moratorio'] = str_replace('.', '', $input['juros_moratorio']);
+        $input['juros_moratorio'] = str_replace(',', '.', $input['juros_moratorio']);
+
+// 
+        try{
+            $processo = RoboExtracaoDetalhes::find($input['hidden_id']);
+            $processo->campo5 = $input['campo5'];
+            $processo->cdProcesso = $input['cdProcesso'];
+            $processo->campo3 = $input['campo3'];
+            $processo->exp = '';
+            $processo->processo_de_origem = $input['processo_de_origem'];
+            $processo->campo4 = $input['campo4'];
+            $processo->campo5 = $input['campo5'];
+            $processo->campo6 = $input['campo6'];
+            $processo->campo7 = $input['campo7'];
+            $processo->cpf = $input['cpf'];;
+            $processo->total_condenacao = $input['total_condenacao'];
+            $processo->requisitado = $input['requisitado'];
+            $processo->principal_bruto = $input['principal_bruto'];
+            $processo->juros_moratorio = $input['juros_moratorio'];
+            $processo->natureza = $input['natureza'];
+            $processo->data_base = $input['data_base'];
+            $processo->save();
+
+            return back()->with('sucesso', 'Processo enviado para a agenda com sucesso');
+
+        }catch(\Exception $e){
+            dd($e->getMessage());
+            return back()->with('erro', 'Ocorreu um erro ao enviar o processo para a agenda');
+        }
+    }
     public function postEnviarAgenda(Request $request){
         $input = $request->all();
 
@@ -671,6 +1114,7 @@ class NovoRoboController extends Controller{
             return back()->withInput()->withErrors($validation);
         }
 
+
         $input['total_condenacao'] = str_replace('.', '', $input['total_condenacao']);
         $input['total_condenacao'] = str_replace(',', '.', $input['total_condenacao']);
 
@@ -684,7 +1128,7 @@ class NovoRoboController extends Controller{
         $input['juros_moratorio'] = str_replace(',', '.', $input['juros_moratorio']);
 
 
-        //try{
+        try{
             $processo = new Processos;
             $processo->cabeca_de_acao = $input['campo5'];
             $processo->cdProcesso = $input['cdProcesso'];
@@ -716,9 +1160,9 @@ class NovoRoboController extends Controller{
 
             return back()->with('sucesso', 'Processo enviado para a agenda com sucesso');
 
-        //}catch(\Exception $e){
+        }catch(\Exception $e){
             dd($e->getMessage());
             return back()->with('erro', 'Ocorreu um erro ao enviar o processo para a agenda');
-        //}
+        }
     }
 }

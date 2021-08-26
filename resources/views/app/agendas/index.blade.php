@@ -75,7 +75,7 @@
                                     }
                                 ?>
 								<div class="table-responsive">
-									<table class="datatable table table-stripped mb-0">
+									<table class="table table-stripped mb-0" id="agendadetails">
 										<thead>
 											<tr>
 												<th>Agenda</th>
@@ -111,13 +111,8 @@
                                                                 <td>'.$labelAgenda.'</td>
                                                                 <td>'.$status.'</td>
                                                                 <td>
-                                                                <div class="btn-group">
-                                                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ações</button>
-                                                                    <div class="dropdown-menu">
-                                                                        <a class="dropdown-item clickEditar" data-id="'.$dados->id.'" href="#">Editar</a>
-                                                                        <a class="dropdown-item clickExcluir" data-id="'.$dados->id.'" href="#">Excluir</a>
-                                                                    </div>
-                                                                </div>
+                                                                    <button class="clickEditar btn btn-info" data-id="'.$dados->id.'">Editar</button>
+                                                                    <button class="clickExcluir btn btn-danger" data-id="'.$dados->id.'">Excluir</button>
                                                                 </td>
                                                             </tr>
                                                         ';
@@ -155,7 +150,7 @@
             });
             $('.clickExcluir').click(function(e){
                 var id = $(this).attr('data-id');
-
+                console.log(id)
                 Swal.fire({
                     title: 'Excluir Agenda?',
                     text: "Tem certeza que deseja excluir essa agenda? Se houver algum processo vinculado a ela, a exclusão não podera ser efetuada",
@@ -170,6 +165,8 @@
                     }
                 });
             });
+            $('#agendadetails').DataTable();
+
         });
     </script>
 </body>

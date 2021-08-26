@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="/assets/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/bootstrap-datetimepicker.min.css">
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
 	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
 	<!--[if lt IE 9]>
 		<script src="assets/js/html5shiv.min.js"></script>
@@ -94,7 +94,7 @@
 					<div class="col-sm-12">
 						<div class="card mb-0">
 							<div class="card-header">
-								<h4 class="card-title mb-0">Cadernos</h4>
+								<h4 class="card-title mb-0">Cadernos ({{$total}} processos)</h4>
 								<p class="card-text">
 									Lista de tarefas já executadas
 								</p>
@@ -109,7 +109,8 @@
                                     }
                                 ?>
 								<div class="table-responsive">
-									<table class="datatable table table-stripped mb-0">
+                                    
+									<table class="table table-stripped mb-0">
 										<thead>
 											<tr>
 												<th>Id</th>
@@ -148,31 +149,24 @@
                                               <td><?php echo date('d/m/Y', strtotime($p->data_base));?></td>
 
                                               <td>
-                                                  <?php
-                                                    if( $p->is_enviado_agenda == 1 ){
-                                                        $class = 'btn btn-outline-dark dropdown-toggle';
-                                                    }else{
-                                                        $class = 'btn btn-primary dropdown-toggle';
-                                                    }
-                                                  ?>
-                                                  <div class="btn-group">
-                                                      <button type="button" class="{{ $class }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ações</button>
-                                                      <div class="dropdown-menu">
-                                                          <?php
-                                                            if( $p->is_enviado_agenda == 1 ){
-                                                                echo '<a class="dropdown-item clickEnviarAgenda" data-id="'.$p->id.'" href="#">Enviar Agenda / Editar</a>';
-                                                            }else{
-                                                                echo '<a class="dropdown-item clickEnviarAgenda" data-id="'.$p->id.'" href="#">Enviar Agenda / Editar</a>';
-                                                            }
-                                                          ?>
+                                              <div class="btn-group">
 
-                                                      </div>
-                                                  </div>
+                                                    <?php
+                                                    if( $p->is_enviado_agenda == 1 ){
+                                                        echo '<a  class="btn btn-secundary clickEditarAgenda glyphicon glyphicon-pencil" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>';
+                                                    }else{
+                                                        echo '<a  class="btn btn-secundary clickEnviarAgenda glyphicon glyphicon-send" data-id="'.$p->id.'"  data-toggle="tooltip" data-placement="top" title="Enviar Agenda"><i class="bi bi-upload"></i></a>';
+                                                        echo '<a  class="btn btn-secundary clickEditarAgenda glyphicon glyphicon-pencil" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>';
+                                                    }
+                                                    ?>
+                                              </div>
                                               </td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
+                                            {{ $sql->links()}}
+                                    </div>
                                 </div>
 
                             </div>
@@ -371,8 +365,7 @@
 
                 $('#form1').submit();
             });
-
-            $('.clickEnviarAgenda').click(function(e){
+            $('.clickEditarAgenda').click(function(e){
                 var id = $(this).attr('data-id');
 
                 $('#modal_caderno_detalhes').modal('show');
@@ -413,6 +406,44 @@
                         }
                     },error: function(err){
                         $('#modal_caderno_detalhes').modal('hide');
+                    },complete: function(){
+
+                    }
+                });
+
+                /*Swal.fire({
+                    title: 'Enviar Processo Agenda?',
+                    text: "Tem certeza que deseja enviar esse processo para agenda?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sim!'
+                }).then((result) => {
+                    if (result.value) {
+                        window.location.href = '/app/robo/enviar-agenda/' + id;
+                    }
+                });*/
+            });
+            $('.clickEnviarAgenda').click(function(e){
+                var element = $(this);
+                var id = element.attr('data-id');
+                $.ajax({
+                    url: '/app/robo/enviar-agenda/' + id,
+                    method: 'GET',
+                    success: function(res){
+                        if(res.error){
+                            swal.fire({
+                                    title: "Falha!",
+                                    text: res.message,
+                                    icon: "error",
+                                    button: "Ok",
+                                });
+                        }else{
+                            element.hide();
+                        }
+                    },error: function(err){
+                       
                     },complete: function(){
 
                     }

@@ -99,7 +99,7 @@
                                                                 <td>'.$status.'</td>
                                                                 <td>
                                                                 <div class="btn-group">
-                                                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ações</button>
+                                                                    <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ações</button>
                                                                     <div class="dropdown-menu">
                                                                         <a class="dropdown-item clickEditar" data-id="'.$dados->id.'" href="#">Editar</a>
                                                                         <a class="dropdown-item clickExcluir" data-id="'.$dados->id.'" href="#">Excluir</a>
