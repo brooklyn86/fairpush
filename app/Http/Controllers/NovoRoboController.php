@@ -138,12 +138,11 @@ class NovoRoboController extends Controller{
              $nomeMaeFormatado = trim($explodeNomeMae[1]);
              $cpfFormatado = trim($explodeCpf[1]);
 
-             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
-             dd('python /home/fairconsultoria/public_html/novoapp/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
-             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
-             $cmdResult = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" '.$cpfFormatado.' /dev/null &');
-             dd('pause');
-             
+            //  $cmdResult1 = shell_exec('python C:/Users\victo/OneDrive/Desktop/fair/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'"'); 
+             $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" ""'.$cpfFormatado.'"');
+             $cmdResult3 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &');
+
+             return redirect()->back()->with('sucesso', 'Extração Realizada');
          }
          } catch (\Throwable $th) {
             dd($th);
@@ -157,7 +156,7 @@ class NovoRoboController extends Controller{
         $arquivos = [];
         while($arquivo = $diretorio->read()){
             if($arquivo != '.' && $arquivo != '' &&  $arquivo != '..'){
-                array_push($arquivos, ['url'=> url('/storage/pdfs/'.$arquivo), 'name' => $arquivo]);
+                array_push($arquivos, ['url'=> url('/storage/certidao/'.$request->cpf.'/'.$arquivo), 'name' => $arquivo]);
             }
         }
         $diretorio->close();

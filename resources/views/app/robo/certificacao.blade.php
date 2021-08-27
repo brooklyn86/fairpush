@@ -108,19 +108,25 @@
 							<div class="card-body">
 								<div class="table-responsive">
                                     <div class="input-group mb-3">
-                                        <form action="/app/getcertificacao" method="get" enctype="multipart/form-data">
-                                            @csrf
-                                            <div class="form-group">
-                                                <input type="text" name="cpf" class="form-control" id="inputGroupFile02">
-                                            </div>
-                                            <input type="submit" class="btn btn-dark" id="inputGroupFile02">
+                                        <div class="form-group">
+                                            <input type="text" name="cpf" class="form-control" id="cpfCertificado">
+                                        </div>
+                                        <button class="btn btn-dark" id="cpfCertificadoSubmit">Recuperar</button>
 
-                                        </form>
                                     </div>
 
 
                                 </div>
-
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                        <th scope="col">Arquivo</th>
+                                        <th scope="col">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="certificados">
+                                    </tbody>
+                                </table>    
                             </div>
                         </div>
                     </div>
@@ -223,6 +229,27 @@
                         }else{
                             $('#modal_caderno_detalhes').modal('hide');
                         }
+                    },error: function(err){
+                        $('#modal_caderno_detalhes').modal('hide');
+                    },complete: function(){
+
+                    }
+                });
+            });
+
+            $('#cpfCertificadoSubmit').click(function(e){
+
+                $('#certificados').html('');
+                var cpfCertificado = $('#cpfCertificado').val()
+                $.ajax({
+                    url: '/app/getcertificacao/?cpf=' + cpfCertificado,
+                    method: 'GET',
+                    success: function(res){
+                        var render = '';
+                        res.map((item) => {
+                            render += '<tr><td>'+item.name+'</td><td><a href="'+item.url+'" target="_blank">Baixar</a></tr>';
+                        });
+                        $('#certificados').append(render);
                     },error: function(err){
                         $('#modal_caderno_detalhes').modal('hide');
                     },complete: function(){

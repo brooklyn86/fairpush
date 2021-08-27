@@ -11,7 +11,7 @@ options.add_argument("--disable-extensions")
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-options.add_experimental_option("prefs", {"download.default_directory": "/home/fairconsultoria/public_html/novoapp/public/storage/certidao"+cpfFormatado})
+options.add_experimental_option("prefs", {"download.default_directory": "/home/fairconsultoria/public_html/novoapp/public/storage/certidao/"+cpfFormatado})
 driver = webdriver.Chrome(executable_path="/home/fairconsultoria/public_html/novoapp/chromedriver",chrome_options=options)
 with driver:
     nomeFormatado = sys.argv[1]
