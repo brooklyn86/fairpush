@@ -30,6 +30,8 @@ use App\RoboCadernos;
 use App\RoboExtracaoDetalhes;
 use App\Jobs\ProcessSms;
 use App\Jobs\DownloadCaderno;
+use App\Jobs\RunBot1;
+use App\Jobs\RunBot2;
 use PDF;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -123,26 +125,45 @@ class NovoRoboController extends Controller{
              $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
              $reader->setLoadAllSheets();
  
-             $spreadsheet = $reader->load('/home/fairconsultoria/public_html/novoapp/storage/app/xls/'.$nameFile);
+             $spreadsheet = $reader->load('/home/fairconsultoria/public_html/storage/app/xls/'.$nameFile);
+            //  $spreadsheet = $reader->load('C:/Users/victo/OneDrive/Desktop/fair/storage/app/xls/'.$nameFile);
              $nome = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 23)->getValue();
              $nascimento = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 24)->getValue();
              $nome_mae = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 25)->getValue();
              $cpf = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 28)->getValue();
+             $rg = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 29)->getValue();
+             $genero = $spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, 30)->getValue();
              $explodeNome = explode(':', $nome);
              $explodeNascimento = explode(':', $nascimento);
              $explodeNomeMae = explode(':', $nome_mae);
              $explodeCpf = explode(':', $cpf);
- 
+             $explodeRG = explode(':', $rg);
+             $explodeGenero = explode(':', $genero);
              $nomeFormatado =  trim($explodeNome[1]);
              $nascimentoFormatado = trim($explodeNascimento[1]);
              $nomeMaeFormatado = trim($explodeNomeMae[1]);
              $cpfFormatado = trim($explodeCpf[1]);
+             $rgFormatado = trim($explodeRG[1]);
+             $generoFormatado = trim($explodeGenero[1]);
+             $rgFormatado = str_replace(".", "", $rgFormatado);
+             $rgFormatado = str_replace("-", "", $rgFormatado);
+             $dados = [
+                 'nomeFormatado' => $nomeFormatado,
+                 'nascimentoFormatado' => $nascimentoFormatado,
+                 'nomeMaeFormatado' => $nomeMaeFormatado,
+                 'cpfFormatado' => $cpfFormatado,
+                 'RgFormatado' => $rgFormatado,
+                 'GeneroFormatado' => $generoFormatado,
+             ];
 
-            //  $cmdResult1 = shell_exec('python C:/Users\victo/OneDrive/Desktop/fair/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'"'); 
-             $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" ""'.$cpfFormatado.'"');
-             $cmdResult3 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &');
+             RunBot1::dispatch($dados);
+             RunBot2::dispatch($dados);
+             RunBot3::dispatch($dados);
+            // //  $cmdResult1 = shell_exec('python C:/Users\victo/OneDrive/Desktop/fair/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'"'); 
+            //  $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" ""'.$cpfFormatado.'"');
+            //  $cmdResult3 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &');
 
-             return redirect()->back()->with('sucesso', 'Extração Realizada');
+             return redirect()->back()->with('sucesso', 'Extração está sendo realizada em segundo plano, alguns das certidões serão enviadas por e-mail');
          }
          } catch (\Throwable $th) {
             dd($th);
