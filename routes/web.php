@@ -12,7 +12,7 @@
 */
 
 Route::get('/', function () {
-    return redirect()->route('/app/login');
+    return redirect('/app/login');
 });
 
 Route::get('teste-valida-numero', 'AppController@testeValidaNumero');

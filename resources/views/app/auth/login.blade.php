@@ -41,7 +41,7 @@
 						<div class="account-wrapper">
 					<!-- Account Logo -->
 					<div class="account-logo">
-						<a href="#"><img src="https://fairconsultoria.com.br/storage/settings/June2019/vVwVfttNAxE8Adwf9Uze.png"
+						<a href="#"><img src="https://fairconsultoria.com.br/fair-price-logo.png"
                             alt="FairConsultoria"></a>
 					</div>
 					<!-- /Account Logo -->

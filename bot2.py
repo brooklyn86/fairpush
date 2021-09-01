@@ -47,6 +47,7 @@ with driver:
         while(True):
             r = requests.get("http://2captcha.com/res.php?key=da8cb7009b4ade6986f284203136fb91&json=1&action=get&id="+crop[1])
             response = r.json()
+            print(response['status'] )
             if(response['status'] == 1):
                 recaptch = response['request']
                 print(response['request'])
@@ -58,13 +59,12 @@ with driver:
                 emitir(nomeFormatado, nascimentoFormatado,nomeMaeFormatado, cpfFormatado)
             print(response)
             time.sleep(3)
-
         driver.close()
         driver.switch_to.window(driver.window_handles[-1])
         driver.find_element(By.ID, "ctl00_ConteudoPrincipal_txtValorCaptcha").send_keys(recaptch)
         driver.find_element(By.ID, "ctl00_ConteudoPrincipal_btnEmitir").click()
         time.sleep(5)
+        print("Download Feito")
         sys.exit()
 
-           
     emitir(nomeFormatado, nascimentoFormatado,nomeMaeFormatado, cpfFormatado)

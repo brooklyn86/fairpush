@@ -53,7 +53,6 @@ with driver:
     driver.find_element(By.ID, 'MainContent_btnPesquisar').click()
     time.sleep(5)
     driver.find_element(By.XPATH, '//*[@id="MainContent_btnImpressao"]').click()
-
-    
-    time.sleep(15)
+    print("Download Feito")
+    time.sleep(5)
     sys.exit()

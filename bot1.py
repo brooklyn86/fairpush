@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -5,6 +7,7 @@ from selenium.webdriver.support.ui import Select
 import sys
 import time
 from selenium.webdriver.chrome.options import Options
+cpfFormatado = sys.argv[4]
 
 options = Options()
 options.add_argument("--disable-extensions")
@@ -18,6 +21,8 @@ with driver:
     nascimentoFormatado = sys.argv[2]
     nomeMaeFormatado = sys.argv[3]
     cpfFormatado = sys.argv[4]
+    rgFormatado = sys.argv[5]
+    generoFormatado = sys.argv[6]
     driver.get("https://esaj.tjsp.jus.br/sajcas/login")
     driver.find_element(By.ID, "usernameForm").click()
     driver.find_element(By.ID, "usernameForm").send_keys("967.933.923-87")
@@ -26,7 +31,6 @@ with driver:
     driver.find_element(By.ID, "pbEntrar").click()
     driver.get("https://esaj.tjsp.jus.br/sco/abrirCadastro.do")
     time.sleep(5)
-    #driver.find_element(By.XPATH, "//*[@id='cdModelo']").click()
     inputElementFruits = driver.find_element_by_xpath("//*[@id='cdModelo']/option[text()='CERT DIST - FALÊNCIAS, CONCORDATAS E RECUPERAÇÕES']").click()
     time.sleep(5)
     driver.find_element(By.XPATH, "//*[@id='nmCadastroF']").click()
@@ -34,10 +38,13 @@ with driver:
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").click()
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").send_keys(cpfFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys("5003197")
-    driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys(rgFormatado)
+    if(generoFormatado == 'Masculino'):
+        driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    else:
+        driver.find_element(By.XPATH, "//*[@id='flGeneroF']").click()
     driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("nivaldoabl@hotmail.com")
+    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("certidoes@fairconsultoria.com.br")
     driver.find_element(By.XPATH, "//*[@id='confirmacaoInformacoes']").click()
     driver.find_element(By.XPATH, "//*[@id='pbEnviar']").click()
     time.sleep(5)
@@ -50,30 +57,56 @@ with driver:
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").click()
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").send_keys(cpfFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys("5003197")
-    driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys(rgFormatado)
+    if(generoFormatado == 'Masculino'):
+        driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    else:
+        driver.find_element(By.XPATH, "//*[@id='flGeneroF']").click()
     driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("nivaldoabl@hotmail.com")
+    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("certidoes@fairconsultoria.com.br")
     driver.find_element(By.XPATH, "//*[@id='confirmacaoInformacoes']").click()
     driver.find_element(By.XPATH, "//*[@id='pbEnviar']").click()
     time.sleep(5)
     driver.get("https://esaj.tjsp.jus.br/sco/abrirCadastro.do")
     time.sleep(5)
-    inputElementFruits = driver.find_element_by_xpath("//*[@id='cdModelo']//option[@value='94']").click()
+    inputElementFruits = driver.find_element_by_xpath("//*[@id='cdModelo']//option[@value='6']").click()
     time.sleep(5)
     driver.find_element(By.XPATH, "//*[@id='nmCadastroF']").click()
     driver.find_element(By.XPATH, "//*[@id='nmCadastroF']").send_keys( nomeFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").click()
     driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").send_keys(cpfFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys("5003197")
-    driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys(rgFormatado)
+    if(generoFormatado == 'Masculino'):
+        driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    else:
+        driver.find_element(By.XPATH, "//*[@id='flGeneroF']").click()
+
     driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").click()
-    driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").send_keys(nomeMaeFormatado)
+    driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").send_keys(unicode(nomeMaeFormatado, "utf-8"))
     driver.find_element(By.XPATH, "//*[@id='dataNascimento']").click()
     driver.find_element(By.XPATH, "//*[@id='dataNascimento']").send_keys(nascimentoFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").click()
-    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("nivaldoabl@hotmail.com")
+    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("certidoes@fairconsultoria.com.br")
+    driver.find_element(By.XPATH, "//*[@id='confirmacaoInformacoes']").click()
+    driver.find_element(By.XPATH, "//*[@id='pbEnviar']").click()
+    time.sleep(5)
+    driver.get("https://esaj.tjsp.jus.br/sco/abrirCadastro.do")
+    time.sleep(5)
+    inputElementFruits = driver.find_element_by_xpath("//*[@id='cdModelo']//option[@value='52']").click()
+    time.sleep(5)
+    driver.find_element(By.XPATH, "//*[@id='nmCadastroF']").click()
+    driver.find_element(By.XPATH, "//*[@id='nmCadastroF']").send_keys( nomeFormatado)
+    driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.nuCpfFormatado']").send_keys(cpfFormatado)
+    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.nuRgFormatado']").send_keys(rgFormatado)
+    if(generoFormatado == 'Masculino'):
+        driver.find_element(By.XPATH, "//*[@id='flGeneroM']").click()
+    else:
+        driver.find_element(By.XPATH, "//*[@id='flGeneroF']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").click()
+    driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").send_keys("certidoes@fairconsultoria.com.br")
     driver.find_element(By.XPATH, "//*[@id='confirmacaoInformacoes']").click()
     driver.find_element(By.XPATH, "//*[@id='pbEnviar']").click()
     time.sleep(15)
