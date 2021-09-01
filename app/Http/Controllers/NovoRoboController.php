@@ -32,6 +32,7 @@ use App\Jobs\ProcessSms;
 use App\Jobs\DownloadCaderno;
 use App\Jobs\RunBot1;
 use App\Jobs\RunBot2;
+use App\Jobs\RunBot3;
 use PDF;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
