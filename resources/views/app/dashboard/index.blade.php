@@ -698,11 +698,17 @@
 
                                         <div class="row">
                                             <div class="col-sm-12">
-											      <div class="form-group">
-                        							<label>Entidade Devedora</label>
-                        							<input class="form-control" type="text" name="mepEntDevedora" id="mepEntDevedora">
-                        						</div>
-
+                                                @if(auth()->user()->role_id != 1)
+                                                    <div class="form-group">
+                                                        <label>Entidade Devedora</label>
+                                                        <input class="form-control" type="text" name="mepEntDevedora" id="mepEntDevedora" disabled>
+                                                    </div>
+                                                @else 
+                                                    <div class="form-group">
+                                                        <label>Entidade Devedora</label>
+                                                        <input class="form-control" type="text" name="mepEntDevedora" id="mepEntDevedora">
+                                                    </div>
+                                                @endif
                         					</div>
                                             <div class="col-sm-6">
                         						<div class="form-group">

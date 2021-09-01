@@ -3171,6 +3171,7 @@ class AppController extends Controller
         $order->cabeca_de_acao = $input['mepCabecaAcao'];
         $order->ordem_cronologica = $input['mepOrdemCronologica'];
         $order->data_nascimento = $input['mepDataNascimento'];
+        $order->entidade_devedora = $input['mepEntDevedora'];
         $order->exp = $input['mepEp'];
         $order->processo_de_origem = $input['mepCampoNumeroProcesso'];
         $order->reqte = $input['mepNomeCliente'];
