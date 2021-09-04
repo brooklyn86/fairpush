@@ -3200,7 +3200,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3236,7 +3236,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3272,7 +3272,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3308,7 +3308,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif> '+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3344,7 +3344,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3381,7 +3381,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3418,7 +3418,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3454,7 +3454,7 @@
                     if(response.data.status == 'ok'){
                         var str = '';
                         $.map( response.data.response, function( val, i ) {
-                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                            str += '<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                 '<div class="kanban-box">'+
                                     '<div class="task-board-header">'+
                                         '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3500,7 +3500,7 @@
 
                             $.map( res.response, function( val, i ) {
 
-                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box0').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3533,7 +3533,7 @@
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
 
-                                $('#box1').append('<div class="card panel  clickEditar divProcesso"  data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box1').append('<div class="card panel  clickEditar divProcesso"  data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;" >'+
@@ -3566,7 +3566,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box2').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>  '+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3598,7 +3598,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box3').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3632,7 +3632,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box5').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3664,7 +3664,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box6').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3696,7 +3696,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box7').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'" data-np="'+val.numeroProcesso+'"  data-dataBase="'+val.dataBase+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+
@@ -3728,7 +3728,7 @@
                     success: function(res){
                         if(res.status == 'ok'){
                             $.map( res.response, function( val, i ) {
-                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan>'+
+                                $('#box8').append('<div class="card panel clickEditar divProcesso" data-valor="'+val.valorBruto+'" data-id="'+val.id+'" data-processoID="'+val.processoID+'" data-nome="'+val.nome+'"  data-dataBase="'+val.dataBase+'" data-np="'+val.numeroProcesso+'" data-userid="'+val.userid+'" data-abandono="'+val.abandono+'" data-valorprecatorio="'+val.valorPrecatorioTotal+'" data-ordem_cronologica="'+val.ordem_cronologica+'" @can("isAdmin") style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endcan @if(auth()->user()->role_id == 4 || auth()->user()->role_id == 2) style="background-color: #'+val.backgroundColor+'; color: #'+val.textColor+'" @endif>'+
                                     '<div class="kanban-box">'+
                                         '<div class="task-board-header">'+
                                             '<span class="status-title" style="white-space: normal; overflow: hidden; text-overflow: ellipsis;">'+

@@ -31,7 +31,7 @@ class RunBot3 implements ShouldQueue
      */
     public function handle()
     {
-        $cmdResult1 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$this->dados['nomeFormatado'].'" "'. $this->$this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$$this->dados['rgFormatado'].'" "'.$this->dados['generoFormatado'].'"'); 
+        $cmdResult1 = shell_exec('python /home/fairconsultoria/public_html/bot3.py "'.$this->dados['nomeFormatado'].'" "'. $this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$this->dados['RgFormatado'].'" "'.$this->dados['generoFormatado'].'"'); 
 
         
     }

@@ -154,15 +154,15 @@ class NovoRoboController extends Controller{
                  'nomeMaeFormatado' => $nomeMaeFormatado,
                  'cpfFormatado' => $cpfFormatado,
                  'RgFormatado' => $rgFormatado,
-                 'GeneroFormatado' => $generoFormatado,
+                 'generoFormatado' => $generoFormatado,
              ];
 
-             RunBot1::dispatch($dados);
-             RunBot2::dispatch($dados);
-             RunBot3::dispatch($dados);
-            // //  $cmdResult1 = shell_exec('python C:/Users\victo/OneDrive/Desktop/fair/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'"'); 
-            //  $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" ""'.$cpfFormatado.'"');
-            //  $cmdResult3 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &');
+            //  RunBot2::dispatch($dados)->delay(now()->addSeconds(20));
+            //  RunBot1::dispatch($dados)->delay(now()->addSeconds(20));
+            //  RunBot3::dispatch($dados)->delay(now()->addSeconds(20));
+             $cmdResult1 = shell_exec('python /home/fairconsultoria/public_html/bot1.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &'); 
+             $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/bot2.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" ""'.$cpfFormatado.'" /dev/null &');
+             $cmdResult3 = shell_exec('python /home/fairconsultoria/public_htmlbot3.py "'.$nomeFormatado.'" "'. $nascimentoFormatado.'" "'.$nomeMaeFormatado.'" "'.$cpfFormatado.'" /dev/null &');
 
              return redirect()->back()->with('sucesso', 'Extração está sendo realizada em segundo plano, alguns das certidões serão enviadas por e-mail');
          }
@@ -172,7 +172,7 @@ class NovoRoboController extends Controller{
     }
 
     public function getCertificados(Request $request){
-        $path = "/home/fairconsultoria/public_html/novoapp/public/storage/certidao/".$request->cpf;
+        $path = "/home/fairconsultoria/public_html/public/storage/certidao/".$request->cpf;
         $diretorio = dir($path);
 
         $arquivos = [];
@@ -253,7 +253,7 @@ class NovoRoboController extends Controller{
         $rc->save();
 
         $content = file_get_contents('http://www.dje.tjsp.jus.br/cdje/downloadCaderno.do?dtDiario='.$input['data'].'&cdCaderno=11');
-        file_put_contents('/home/fairconsultoria/public_html/novoapp/public/temppdf/'.$data_sembarra.'.pdf', $content);
+        file_put_contents('/home/fairconsultoria/public_html/public/temppdf/'.$data_sembarra.'.pdf', $content);
 
         $rc->is_extraido = 1;
         $rc->is_extraindo = 0;
@@ -279,12 +279,12 @@ class NovoRoboController extends Controller{
             'project_public_4920b1735dca06aaeb93d392dcb19a8c_L36pdab9c3802d513a351ea1e8a51489ac0d4',
             'secret_key_687193f005eee3ed1d6dc10e12161bc8_6sShF31fac5ce7b495ffd2ad86b0c08437b2e');
 
-        $file = $myTask->addFile('/home/fairconsultoria/public_html/novoapp/public/temppdf/'.$data_sembarra.'.pdf');
+        $file = $myTask->addFile('/home/fairconsultoria/public_html/public/temppdf/'.$data_sembarra.'.pdf');
         $myTask->setRanges("1-875");
         $myTask->setPackagedFilename('split_documents');
         $myTask->setOutputFilename('split_'.$data_sembarra.'');
         $myTask->execute();
-        $myTask->download('/home/fairconsultoria/public_html/novoapp/public/temppdf');
+        $myTask->download('/home/fairconsultoria/public_html/public/temppdf');
 
         $rc->is_split = 1;
         $rc->output_file_name = 'split_'.$data_sembarra.'';
@@ -294,7 +294,7 @@ class NovoRoboController extends Controller{
         return back()->with('sucesso', 'Disparo efetuado com sucesso');
     }
     public function viewCrawlerCadernoAntes($id){
-        $sql = RoboExtracaoDetalhes::where('campo2', $id)->where('passou_robo',1)->paginate(10);
+        $sql = RoboExtracaoDetalhes::where('campo2', $id)->paginate(10);
         $tiposAgenda = TipoAgenda::all();
         $arrayTiposAgenda = [];
 
@@ -632,14 +632,14 @@ public function store(Request $request)
             'project_public_4920b1735dca06aaeb93d392dcb19a8c_L36pdab9c3802d513a351ea1e8a51489ac0d4',
             'secret_key_687193f005eee3ed1d6dc10e12161bc8_6sShF31fac5ce7b495ffd2ad86b0c08437b2e');
         $myTask = $ilovepdf->newTask('extract');
-        $file1 = $myTask->addFile('/home/fairconsultoria/public_html/novoapp/public/temppdf/'.$sql[0]->output_file_name.'-1-670.pdf');
+        $file1 = $myTask->addFile('/home/fairconsultoria/public_html/public/temppdf/'.$sql[0]->output_file_name.'-1-670.pdf');
         $myTask->setOutputFilename('text-'.$sql[0]->output_file_name);
         $result = $myTask->execute();
-        $myTask->download('/home/fairconsultoria/public_html/novoapp/public/temppdf');*/
+        $myTask->download('/home/fairconsultoria/public_html/public/temppdf');*/
 
-        shell_exec('pdftotext -layout /home/fairconsultoria/public_html/novoapp/public/temppdf/'.$sql[0]->output_file_name.'-1-875.pdf /home/fairconsultoria/public_html/novoapp/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
+        shell_exec('pdftotext -layout /home/fairconsultoria/public_html/public/temppdf/'.$sql[0]->output_file_name.'-1-875.pdf /home/fairconsultoria/public_html/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
 
-        $arquivo = file_get_contents('/home/fairconsultoria/public_html/novoapp/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
+        $arquivo = file_get_contents('/home/fairconsultoria/public_html/public/temppdf/text-'.$sql[0]->output_file_name.'.txt');
         $key = null; $time = null; $processos = null; $validador = false;$i = 0;
 
         //$arquivo = mb_convert_encoding($arquivo, 'UTF-8', 'UTF-16');
@@ -756,9 +756,11 @@ public function store(Request $request)
             $processos->save();
 
             $filename =  $processos->cdProcesso.'.pdf';
-            $tempImage = base_path('public/temppdf2/'.$filename);
+            $tempImage = base_path('novoapp/public/temppdf2/'.$filename);
             $nuProcesso = explode('/', $processos->processo_de_origem);
+
             $arquivo = \File::copy($url, $tempImage);
+
             //$size = filesize(base_path('public/storage/pdf/'.$filename));
 
             shell_exec('pdftotext -layout /home/fairconsultoria/public_html/novoapp/public/temppdf2/'.$filename.' /home/fairconsultoria/public_html/novoapp/public/temppdf2/'.$processos->cdProcesso.'.txt');
@@ -1046,7 +1048,7 @@ public function store(Request $request)
 
         return back()->with('sucesso', 'O crawler esta trabalhando e atualizando os dados do processo');
         //shell_exec('scl enable rh-python36 bash');
-        /*$output = shell_exec('sudo python3 /home/fairconsultoria/public_html/novoapp/robo_python.py');
+        /*$output = shell_exec('sudo python3 /home/fairconsultoria/public_html/robo_python.py');
         echo $output;
 
         $sql[0]->status_python = 1;

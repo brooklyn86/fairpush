@@ -20,7 +20,6 @@ class RunBot1 implements ShouldQueue
     public function __construct($dados)
     {
         $this->dados = $dados;
-        
     }
 
     /**
@@ -30,7 +29,9 @@ class RunBot1 implements ShouldQueue
      */
     public function handle()
     {
-        $cmdResult1 = shell_exec('python /home/fairconsultoria/public_html/novoapp/bot1.py "'.$this->dados['nomeFormatado'].'" "'. $this->$this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$$this->dados['rgFormatado'].'" "'.$this->dados['generoFormatado'].'"'); 
+        $cmdResult1 = shell_exec('python /home/fairconsultoria/public_html/bot1.py "'.$this->dados['nomeFormatado'].'" "'. $this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$this->dados['RgFormatado'].'" "'.$this->dados['generoFormatado'].'" /dev/null &'); 
+        // $cmdResult2 = shell_exec('python /home/fairconsultoria/public_html/bot2.py "'.$this->dados['nomeFormatado'].'" "'. $this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$this->dados['RgFormatado'].'" "'.$this->dados['generoFormatado'].'" /dev/null &'); 
+        // $cmdResult3 = shell_exec('python /home/fairconsultoria/public_html/bot3.py "'.$this->dados['nomeFormatado'].'" "'. $this->dados['nascimentoFormatado'].'" "'.$this->dados['nomeMaeFormatado'].'" "'.$this->dados['cpfFormatado'].'" "'.$this->dados['RgFormatado'].'" "'.$this->dados['generoFormatado'].'" /dev/null &' ); 
         
     }
 }

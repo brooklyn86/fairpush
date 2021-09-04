@@ -1891,7 +1891,7 @@ class AppController extends Controller
                     ->leftJoin('tipo_agenda', 'tipo_agenda.id','=','processos.idSubtipoAgenda')
                     ->select('processos.*','processos.id as processoID', 'users.backgroundColor', 'users.textColor', 'users.id as userid', 'tipo_agenda.tipoAgenda as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
                     ->where(function($query) use ($input) {
-                        if(auth()->user()->role_id != User::ADMIN){
+                        if(auth()->user()->role_id != User::ADMIN  && auth()->user()->role_id != User::GERENTE && auth()->user()->role_id != User::EDICAO){
                             $query->where('processos.user_id',auth()->user()->id);
                         }
                         if(isset($input['tipoAgenda']) && $input['tipoAgenda'] != '' && !is_null($input['tipoAgenda'])){
@@ -1956,7 +1956,7 @@ class AppController extends Controller
                     ->leftJoin('tipo_agenda', 'tipo_agenda.id','=','subtipo_agenda.idTipoAgenda')
                     ->select('processos.*','processos.id as processoID','users.backgroundColor', 'users.textColor', 'users.id as userid', 'subtipo_agenda.titulo as tituloSubTipo', 'tipo_agenda.tipoAgenda as tituloTipo')
                     ->where(function($query) use ($input) {
-                        if(auth()->user()->role_id != User::ADMIN){
+                        if(auth()->user()->role_id != User::ADMIN && auth()->user()->role_id != User::GERENTE && auth()->user()->role_id != User::EDICAO){
                             $query->where('processos.user_id',auth()->user()->id);
                         }
                         if(isset($input['tipoAgenda']) && $input['tipoAgenda'] != '' && !is_null($input['tipoAgenda'])){

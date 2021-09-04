@@ -11,6 +11,8 @@ class User extends Authenticatable
     use Notifiable;
     public const ADMIN = 1;
     public const COLABORADOR = 3;
+    public const GERENTE = 4;
+    public const EDICAO = 2;
 
     /**
      * The attributes that are mass assignable.
