@@ -14,8 +14,8 @@ options.add_argument("--disable-extensions")
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-options.add_experimental_option("prefs", {"download.default_directory": "/home/fairconsultoria/public_html/public/storage/certidao/"+cpfFormatado})
-driver = webdriver.Chrome(executable_path="/home/fairconsultoria/public_html/novoapp/chromedriver",chrome_options=options)
+options.add_experimental_option("prefs", {"download.default_directory": "/www/wwwroot/191.252.191.155/storage/certidao/"+cpfFormatado})
+driver = webdriver.Chrome(executable_path="/www/wwwroot/191.252.191.155/chromedriver",chrome_options=options)
 with driver:
     nomeFormatado = sys.argv[1]
     nascimentoFormatado = sys.argv[2]
@@ -83,7 +83,7 @@ with driver:
         driver.find_element(By.XPATH, "//*[@id='flGeneroF']").click()
 
     driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").click()
-    driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").send_keys(unicode(nomeMaeFormatado, "utf-8"))
+    driver.find_element(By.XPATH, "//*[@id='nmMaeCadastro']").send_keys(str(nomeMaeFormatado))
     driver.find_element(By.XPATH, "//*[@id='dataNascimento']").click()
     driver.find_element(By.XPATH, "//*[@id='dataNascimento']").send_keys(nascimentoFormatado)
     driver.find_element(By.XPATH, "//*[@id='identity.solicitante.deEmail']").click()
@@ -111,5 +111,5 @@ with driver:
     driver.find_element(By.XPATH, "//*[@id='pbEnviar']").click()
     time.sleep(15)
     driver.get("https://duc.prefeitura.sp.gov.br/certidoes/forms_anonimo/frmConsultaEmissaoCertificado.aspx")
-
+    print('Rodado')
     sys.exit()

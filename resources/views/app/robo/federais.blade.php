@@ -121,6 +121,8 @@
                                                         }else{
                                                             echo '<a  class="btn btn-secundary clickEnviarAgenda glyphicon glyphicon-send" data-id="'.$p->id.'"  data-toggle="tooltip" data-placement="top" title="Enviar Agenda"><i class="bi bi-upload"></i></a>';
                                                             echo '<a  class="btn btn-secundary clickEditarAgenda glyphicon glyphicon-pencil" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>';
+                                                            echo '<a  class="btn btn-secundary clickDeletarAgenda glyphicon glyphicon-trash" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Remover"><i class="bi bi-trash"></i></a>';
+
                                                         }
                                                         ?>
                                                       </div>

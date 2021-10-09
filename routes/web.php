@@ -60,7 +60,7 @@ Route::middleware('auth')->prefix('app')->group(function(){
     Route::get('agenda/recupera-dados-e-comentarios/{idprocesso}', 'AppController@recuperaDadoseComentariosByProcessoId');
 
     Route::post('agenda/enviar-chat', 'AppController@postEnviarChat');
-    Route::get('agenda/capturaCpf/contatos', 'AppController@postAtualizaCPF');
+    // Route::get('agenda/capturaCpf/contatos', 'AppController@postAtualizaCPF');
     Route::get('agenda/atualizaScore', 'AppController@postAtualizaScoreCPF');
     Route::post('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
     Route::get('agenda/salvar-telefone', 'AppController@postSalvarTelefone');
@@ -106,6 +106,7 @@ Route::middleware('auth')->prefix('app')->group(function(){
     Route::post('sms/dispara-sms', 'AppController@disparaSms');
     Route::post('gerar/carta-cliente', 'AppController@gerarCartaCliente')->name('cadastrar.carta');
     Route::get('robo/enviar-agenda/{id}', 'AppController@enviarAgendaAdmin');
+    Route::get('robo/deletar-agenda/{id}', 'AppController@deletarAgendaAdmin');
     Route::get('robo/enviar-agenda-federais/{id}', 'AppController@enviarAgendaFederais');
 
 
@@ -145,8 +146,10 @@ Route::middleware(['checkAdmin','auth'])->prefix('app')->group(function(){
     Route::get('agenda/processos/lista', 'AppController@processosAgendaLista')->name('app.agendas.processos.lista');
     Route::get('agenda/processos/generate', 'AppController@generateExcelAgenda')->name('app.agendas.gerar.lista');
     Route::get('agenda/extrair-agenda', 'AppController@extrairAgenda')->name('app.agendas.extrair.lista');
+    Route::get('agenda/extrair-agenda-emails', 'AppController@extrairAgendaEmails')->name('app.agendas.extrair.lista_emails');
 
     Route::get('get-processos-agenda', 'AppController@getAgendaProcessos')->name('get.agenda.processos');
+    Route::get('get-processos-agenda-emails', 'AppController@getAgendaProcessosEmails')->name('get.agenda.processos_emails');
 
     Route::get('sms/index', 'AppController@viewSmsIndex')->name('app.sms.index');
     Route::get('sms/cadastrar', 'AppController@viewCadastrarSms')->name('app.sms.viewcadastrar');

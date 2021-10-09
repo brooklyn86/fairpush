@@ -151,10 +151,11 @@
                     <a href="#"><i class="la la-newspaper-o"></i> <span>Dados da plataforma</span> <span class="menu-arrow"></span></a>
                     <ul style="display: none;">
                         <li><a href="/app/agenda/extrair-agenda">Extrair Agenda</a></li>
+                        <li><a href="/app/agenda/extrair-agenda-emails">Extrair Emails</a></li>
                         <li><a href="/agenda/extrair-pabx">Extrair PABX</a></li>
                     </ul>
                 </li>
-                
+
                 @endcan
             </ul>
         </div>

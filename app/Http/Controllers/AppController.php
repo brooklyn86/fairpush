@@ -538,7 +538,8 @@ class AppController extends Controller
         $input = $request->all();
 
         $curl = curl_init();
-        $token = base64_encode('arthur.curti@fairconsultoria.com.br:arthur3126294');
+        //$token = base64_encode('arthur.curti@fairconsultoria.com.br:arthur3126294');
+        $token = base64_encode('');
         curl_setopt_array($curl, array(
           CURLOPT_URL => "https://api.procob.com/consultas/v2/L0001/". intval($input['cpf']),
           CURLOPT_RETURNTRANSFER => true,
@@ -1144,6 +1145,47 @@ class AppController extends Controller
     //}
 
    }
+   public function DeletarAgendaAdmin(Request $request){
+
+    $sql = RoboExtracaoDetalhes::find($request->id);
+
+    if($sql == null){ returnResponse()->json(['error' => true, 'message' => 'Item não encontrado']); }
+
+    if($sql->passou_robo != 1){
+        return Response()->json(['error' => true, 'message' => 'Esse item ainda não foi atualizado pelo robô']);
+    }
+    if($sql->is_enviado_agenda != 0){
+        return Response()->json(['error' => true, 'message' => 'Esse item já foi enviado para a agenda']);
+    }
+
+
+    $hasAgenda = Agenda::where('processo_id',$hasProcesso->id)->first();
+    if($hasAgenda){
+        return Response()->json(['error' => true, 'message' => 'Esse item já foi enviado para a agenda']);
+    }
+
+    try{
+        DB::beginTransaction();
+            $hasProcesso = Processos::where('processo_de_origem',  $sql->processo_de_origem)->first();
+            if($hasProcesso){
+                Processos::destroy($hasProcesso->id);
+
+            }
+            $sql = RoboExtracaoDetalhes::find($request->id);
+            if($hasProcesso){
+                RoboExtracaoDetalhes::destroy($sql->id);
+            }
+
+        DB::commit();
+
+        return  Response()->json(['error' => false, 'message' => 'Processo deletado com sucesso']);
+
+    }catch(\Exception $e){
+        DB::rollBack();
+        return  Response()->json(['error' => true, 'message' => 'Ocorreu um erro ao deletar o processo']);
+    }
+
+   }
 
    public function enviarAgendaFederais(Request $request){
 
@@ -1513,6 +1555,7 @@ class AppController extends Controller
         $sql->email = $input['email'];
         $sql->role_id = $input['role_id'];
         $sql->status = $input['status'];
+        $sql->local = $input['local'];
         $sql->backgroundColor = $input['backgroundColor'];
         $sql->textColor = $input['textColor'];
 
@@ -1590,7 +1633,7 @@ class AppController extends Controller
     }
 
     public function generateAgenda2(){
-        
+
         $spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setCellValue('A1', 'Processo');
@@ -1667,7 +1710,7 @@ class AppController extends Controller
         header("Pragma: no-cache");
         header("Expires: 0");
         $writer->save('php://output');
-       
+
     }
 
 
@@ -1810,6 +1853,78 @@ class AppController extends Controller
 
     public function extrairAgenda(){
         return view('app.dados_plataforma.extrair_agenda');
+    }
+    public function extrairAgendaEmails(){
+        return view('app.dados_plataforma.extrair_agenda_emails');
+    }
+    public function getAgendaProcessosEmails(Request $request){
+        ini_set('memory_limit', '-1');
+
+        $sql = Processos::leftJoin('agenda', 'agenda.processo_id','=','processos.id')
+        ->select('processos.*', 'agenda.*', 'processos.id as process_id',
+            'users.name','emails.email')
+            ->leftJoin('users', 'users.id','=','processos.user_id')
+            ->leftJoin('emails', 'emails.order_id','=','processos.id')
+            ->whereNotNull('agenda.processo_id')->whereNotNull('emails.email')->get()->toArray();
+        return Datatables($sql)
+        ->addColumn('juros_moratorio', function($row){
+            return 'R$ '.number_format($row['juros_moratorio'],2,',','.');
+        })
+        ->addColumn('principal_bruto', function($row){
+            return 'R$ '.number_format($row['principal_bruto'],2,',','.');
+        })
+        ->addColumn('nomeUser', function($row){
+            if(is_null($row['name']) ){
+                return 'Sem atribuição';
+            }
+            return $row['name'];
+        })
+        ->addColumn('ordem_cronologica', function($row){
+            if(is_null($row['ordem_cronologica']) ){
+                return 'Não Informada';
+            }
+            return $row['ordem_cronologica'];
+        })
+        ->addColumn('advogado', function($row){
+            if(is_null($row['advogado']) ){
+                return 'Não Informado';
+            }
+            return $row['advogado'];
+        })
+        ->addColumn('principal_bruto', function($row){
+            return 'R$ '.number_format($row['principal_bruto'],2,',','.');
+        })
+        ->addColumn('data_abertura', function($row){
+            if(!is_null($row['dataUltimaAbertura'])){
+                return \Carbon\Carbon::create($row['dataUltimaAbertura'])->format('d/m/Y H:i:s');
+            }else{
+                return '';
+            }
+        })
+       ->addColumn('status', function($row){
+        $status = 'Sem Status';
+
+        if($row['status_id'] == 1){
+            $status = 'Novo';
+        }elseif($row['status_id'] == 2){
+            $status = 'Tentando Contato';
+        }elseif($row['status_id'] == 3){
+            $status = 'Sem Interesse';
+        }elseif($row['status_id'] == 4){
+            $status = 'Proposta Enviada';
+        }elseif($row['status_id'] == 6){
+            $status = 'Cliente Avaliando';
+        }elseif($row['status_id'] == 7){
+            $status = 'Parecer';
+        }elseif($row['status_id'] == 8){
+            $status = 'Cessão Agendada';
+        }elseif($row['status_id'] == 9){
+            $status = 'Pagamento Realizado';
+        }
+
+        return $status;
+        })
+        ->make();
     }
     public function getAgendaProcessos(Request $request){
         ini_set('memory_limit', '-1');

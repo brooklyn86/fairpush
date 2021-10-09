@@ -117,14 +117,21 @@
                                     </div>
 
                                     <div class="form-row">
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-4 mb-3">
                                             <label>Status</label>
                                             {{ Form::select('status', [
                                                 '1' => 'Ativo',
                                                 '0' => 'Inativo'
                                             ], null, ['class' => 'form-control']) }}
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-4 mb-3">
+                                            <label>Local</label>
+                                            {{ Form::select('local', [
+                                                '1' => 'Santa fé',
+                                                '0' => 'Fair Consultoria'
+                                            ], null, ['class' => 'form-control']) }}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
                                             <label>Selecione o setor</label>
                                             {{ Form::select('role_id', $arrayRoles, null, ['class' => 'form-control']) }}
                                         </div>

@@ -80,7 +80,7 @@
                                     }
                                 ?>
 								<div class="table-responsive">
-									<table class="datatable table table-stripped mb-0">
+									<table class="table table-stripped mb-0">
 										<thead>
 											<tr>
 												<th>Nome</th>

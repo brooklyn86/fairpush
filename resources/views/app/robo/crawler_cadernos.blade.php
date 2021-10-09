@@ -179,6 +179,7 @@
                                                     }else{
                                                         echo '<a  class="btn btn-secundary clickEnviarAgenda glyphicon glyphicon-send" data-id="'.$p->id.'"  data-toggle="tooltip" data-placement="top" title="Enviar Agenda"><i class="bi bi-upload"></i></a>';
                                                         echo '<a  class="btn btn-secundary clickEditarAgenda glyphicon glyphicon-pencil" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>';
+                                                        echo '<a  class="btn btn-secundary clickDeletarAgenda glyphicon glyphicon-trash" data-id="'.$p->id.'"   data-toggle="tooltip" data-placement="top" title="Remover"><i class="bi bi-trash"></i></a>';
                                                     }
                                                     ?>
                                               </div>
@@ -447,6 +448,32 @@
                     }
                 });*/
             });
+            $('.clickDeletarAgenda').click(function(e){
+                var id = $(this).attr('data-id');
+
+                var element = $(this);
+                var id = element.attr('data-id');
+                $.ajax({
+                    url: '/app/robo/deletar-processo/' + id,
+                    method: 'GET',
+                    success: function(res){
+                        if(res.error){
+                            swal.fire({
+                                    title: "Falha!",
+                                    text: res.message,
+                                    icon: "error",
+                                    button: "Ok",
+                                });
+                        }else{
+                            element.hide();
+                        }
+                    },error: function(err){
+                       
+                    },complete: function(){
+
+                    }
+                });
+            });
             $('.clickEnviarAgenda').click(function(e){
                 var element = $(this);
                 var id = element.attr('data-id');
@@ -485,7 +512,32 @@
                     }
                 });*/
             });
+            $('.clickDeletarAgenda').click(function(e){
+                var id = $(this).attr('data-id');
 
+                var element = $(this);
+                var id = element.attr('data-id');
+                $.ajax({
+                    url: '/app/robo/deletar-processo/' + id,
+                    method: 'GET',
+                    success: function(res){
+                        if(res.error){
+                            swal.fire({
+                                    title: "Falha!",
+                                    text: res.message,
+                                    icon: "error",
+                                    button: "Ok",
+                                });
+                        }else{
+                            element.hide();
+                        }
+                    },error: function(err){
+                       
+                    },complete: function(){
+
+                    }
+                });
+            });
             $('#filtroTipoProcesso').change(function(e){
                tipoAgenda = $(this).val();
 

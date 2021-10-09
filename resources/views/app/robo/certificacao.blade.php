@@ -82,7 +82,7 @@
                                             <div class="form-group">
                                                 <input type="file" name="file" class="form-control" id="inputGroupFile02">
                                             </div>
-                                            <input type="submit" class="btn btn-dark" id="inputGroupFile02">
+                                            <input type="submit" class="btn btn-dark" id="inputGroupFile02" />
 
                                         </form>
                                     </div>
@@ -106,17 +106,13 @@
 								</p>
 							</div>
 							<div class="card-body">
-								<div class="table-responsive">
-                                    <div class="input-group mb-3">
-                                        <div class="form-group">
-                                            <input type="text" name="cpf" class="form-control" id="cpfCertificado">
-                                        </div>
-                                        <button class="btn btn-dark" id="cpfCertificadoSubmit">Recuperar</button>
-
-                                    </div>
-
-
+                                <div class="form-group">
+                                    <input type="text" name="cpf" class="form-control" id="cpfCertificado">
                                 </div>
+                                <input style="margin-bottom:20px;" type="button" class="btn btn-dark" id="cpfCertificadoSubmit" value="Recuperar Certidões"/>
+
+								<div class="table-responsive">
+
                                 <table class="table">
                                     <thead>
                                         <tr>

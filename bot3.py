@@ -16,8 +16,8 @@ options.add_argument("--disable-extensions")
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-options.add_experimental_option("prefs", {"download.default_directory": "/home/fairconsultoria/public_html/public/storage/certidao/"+cpfFormatado})
-driver = webdriver.Chrome(executable_path="/home/fairconsultoria/public_html/novoapp/chromedriver",chrome_options=options)
+options.add_experimental_option("prefs", {"download.default_directory": "/www/wwwroot/191.252.191.155/public/storage/certidao/"+cpfFormatado})
+driver = webdriver.Chrome(executable_path="/www/wwwroot/191.252.191.155/chromedriver",chrome_options=options)
 
 with driver:
     nomeFormatado = sys.argv[1]
@@ -54,5 +54,5 @@ with driver:
     time.sleep(5)
     driver.find_element(By.XPATH, '//*[@id="MainContent_btnImpressao"]').click()
     print("Download Feito")
-    time.sleep(5)
+    time.sleep(90)
     sys.exit()

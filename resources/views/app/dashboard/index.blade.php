@@ -719,7 +719,7 @@
                                                             <span class="input-group-text" style="background:orange; color:white;" id="score">SC:</span>
                                                         </div>
                                                     </div>
-                                                    <span class="input-group-addon" id="atualizaCPF" >Atualizar Dados</span>
+                                                    <span class="input-group-addon" id="atualizaDados" >Atualizar Dados</span>
                                                     <div class="spinner-border spinner-border-sm hidden" id="loadingCPF" role="status" hidden>
                                                         <span class="sr-only">Loading...</span>
                                                     </div>
@@ -2028,16 +2028,15 @@
                 });
 
             });
-            $('#atualizaCPF').click(function(e){
+            $('#atualizaDados').click(function(e){
                 var cpf = $('#mepCpf').val();
                 var idProcesso = $('#mepIdProcesso').val();
                 $('#loadingCPF').removeAttr('hidden')
                 localStorage.setItem('validaNumero', moment().format());
                 $.ajax({
-                    url: 'agenda/capturaCpf/contatos?cpf='+cpf.replace(/[^\d]+/g,'')+'&idProcesso='+idProcesso,
+                    url: 'agenda/atualizaScore?cpf='+cpf.replace(/[^\d]+/g,'')+'&idProcesso='+idProcesso,
                     method: 'GET',
                     success: function(res){
-                        $('#mepDataNascimento').val(res.data_nascimento);
                         $.each(res.telefones,function(index,val){
                             $('#tbodyTelefones').append('<tr>'+
                                 '<td>'+val.telefone+'</td>'+
@@ -2055,21 +2054,7 @@
                                 '</td>'+
                             '</tr>');
                         });
-                        $.each(res.emails,function(index,val){
-                            $('#tbodyEmails').append('<tr>'+
-                                '<td>'+val.email+'</td>'+
-                                '<td class="text-right">'+
-                                    '<div class="dropdown dropdown-action">'+
-                                        '<a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">'+
-                                            '<i class="material-icons">more_vert</i>'+
-                                        '</a>'+
-                                        '<div class="dropdown-menu dropdown-menu-right">'+
-                                            '<a class="dropdown-item clickExcluirEmail" href="#" data-id="'+val.id+'"><i class="fa fa-trash-o m-r-5"></i> Excluir</a>'+
-                                        '</div>'+
-                                    '</div>'+
-                                '</td>'+
-                            '</tr>');
-                        });
+                        $('#score').html('SC: '+res.score);
                         $('#loadingCPF').attr('hidden',true);
                         Swal.fire({
                         icon: 'success',

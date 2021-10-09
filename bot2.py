@@ -7,6 +7,7 @@ import time
 import json
 import sys
 from selenium.webdriver.chrome.options import Options
+import subprocess
 
 cpfFormatado = sys.argv[4]
 
@@ -15,8 +16,8 @@ options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument("--disable-extensions")
-options.add_experimental_option("prefs", {"download.default_directory": "/home/fairconsultoria/public_html/public/storage/certidao/"+cpfFormatado})
-driver = webdriver.Chrome(executable_path="/home/fairconsultoria/public_html/novoapp/chromedriver",chrome_options=options)
+options.add_experimental_option("prefs", {"download.default_directory": "/www/wwwroot/191.252.191.155/public/storage/certidao/"+cpfFormatado})
+driver = webdriver.Chrome(executable_path="/www/wwwroot/191.252.191.155/chromedriver",chrome_options=options)
 with driver:
     nomeFormatado = sys.argv[1]
     nascimentoFormatado = sys.argv[2]
@@ -63,8 +64,9 @@ with driver:
         driver.switch_to.window(driver.window_handles[-1])
         driver.find_element(By.ID, "ctl00_ConteudoPrincipal_txtValorCaptcha").send_keys(recaptch)
         driver.find_element(By.ID, "ctl00_ConteudoPrincipal_btnEmitir").click()
-        time.sleep(5)
+        time.sleep(20)
         print("Download Feito")
-        sys.exit()
 
+        sys.exit()
+        
     emitir(nomeFormatado, nascimentoFormatado,nomeMaeFormatado, cpfFormatado)
